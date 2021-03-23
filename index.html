@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-zoom=1">
+    <title>Deep Reinforcement Learning Interactive Demo</title>
+
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/p5@1.2.0/lib/p5.js"></script>
+
+    <!--SCRIPTS DEPENDENCIES-->
+    <script defer src="./js/box2d.js">  </script>
+    <script defer src="./js/config.js"></script>
+    <script defer src="js/Box2D_dynamics/water_dynamics.js"></script>
+    <script defer src="js/Box2D_dynamics/climbing_dynamics.js"></script>
+    <script defer src="js/Box2D_dynamics/contact_detector.js"></script>
+    <script defer src="./js/utils/custom_user_data.js"></script>
+    <script defer src ="./js/bodies/bodies_enum.js"></script>
+    <script defer src ="./js/bodies/abstract_body.js"></script>
+    <script defer src ="./js/bodies/walker_abstract_body.js"></script>
+    <script defer src ="./js/bodies/old_classic_bipedal_body.js"></script>
+    <script defer src ="./js/bodies/classic_bipedal_body.js"></script>
+    <script defer src="./js/parametric_continuous_flat_parkour.js"></script>
+    <script defer src="./js/parkour_game.js"></script>
+    <script defer src="./js/draw_p5js.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
+    <!-- <style link="css/walkers.css"></style> -->
+</head>
+
+<body>
+<section class="section">
+    <div class="container">
+        <h1 class="title has-text-centered">Deep Reinforcement Learning Interactive Demo</h1>
+
+        <div id="canvas_container">
+            <!--<canvas id="main_screen2" width="1300" height="350" style="background-color: lightgrey" ></canvas>-->
+        </div>
+        <!--
+        <div class="slidecontainer">
+            <p>Agent position:</p>
+            <input type="range" min="0" max="100" value="0" class="slider" id="agentSlider">
+            <p id="agentValue"></p>
+        </div>
+        -->
+        <div class="slidecontainer">
+            <p>Horizontal scroll:</p>
+            <input type="range" min="0" max="100" value="0" class="slider" id="scrollSlider">
+            <button id="followAgentButton"> Follow agent </button>
+            <p id="scrollValue"></p>
+        </div>
+        <div class="slidecontainer">
+            <p>Zoom:</p>
+            <input type="range" min="0.4" max="1.5" value="1" class="slider" id="zoomSlider">
+            <p id="zoomValue"></p>
+        </div>
+        <div>
+            <button id="jointsButton"> Draw joints </button>
+            <button id="lidarsButton"> Draw lidars </button>
+        </div>
+    </div>
+</section>
+
+</body>
+
+<script>
+    function init() {
+        let canvas_id = 'main_screen2';
+        window.game = new ParkourGame(config, canvas_id);
+        game.loop();
+
+        //let canvas = document.getElementById(canvas_id);
+        //canvas.style.background = 'lightGrey';
+    }
+
+    window.addEventListener("load", init, false);
+
+    // Agent position slider
+    /*let agentSlider = document.getElementById("agentSlider");
+    agentSlider.step = 0.1;
+    let agentValue = document.getElementById("agentValue");
+    agentValue.innerHTML = agentSlider.value; // Display the default slider value
+    // Update the current slider value (each time you drag the slider handle)
+    agentSlider.oninput = function() {
+        //window.game.env.set_agent_position(this.value);
+        agentValue.innerHTML = this.value;
+    }*/
+
+    // Scroll slider
+    let scrollSlider = document.getElementById("scrollSlider");
+    scrollSlider.step = 0.1;
+    let scrollValue = document.getElementById("scrollValue");
+    scrollValue.innerHTML = scrollSlider.value; // Display the default slider value
+
+    // Update the current slider value (each time you drag the slider handle)
+    scrollSlider.oninput = function() {
+        window.game.env.set_scroll_offset(this.value);
+        scrollValue.innerHTML = this.value;
+    }
+
+    // zoom slider
+    let zoomSlider = document.getElementById("zoomSlider");
+    zoomSlider.step = 0.01;
+    zoomSlider.value = 1;
+    let zoomValue = document.getElementById("zoomValue");
+    zoomValue.innerHTML = "x" + zoomSlider.value; // Display the default slider value
+
+    // Update the current slider value (each time you drag the slider handle)
+    zoomSlider.oninput = function() {
+        zoomValue.innerHTML = "x" + this.value;
+        window.game.env.set_zoom(this.value);
+        scrollSlider.value = 0;
+        scrollValue.innerHTML = 0;
+        window.game.env.set_scroll_offset(0);
+    }
+
+    let jointsButton = document.getElementById("jointsButton");
+    window.draw_joints = false;
+    jointsButton.onclick = function (){
+        window.draw_joints = !window.draw_joints;
+    }
+
+    let lidarsButton = document.getElementById("lidarsButton");
+    window.draw_lidars = false;
+    lidarsButton.onclick = function (){
+        window.draw_lidars = !window.draw_lidars;
+    }
+
+    let followAgentButton = document.getElementById("followAgentButton");
+    window.draw_lidars = false;
+    followAgentButton.onclick = function (){
+        window.follow_agent = !window.follow_agent;
+    }
+</script>
+
+
+
+</html>
