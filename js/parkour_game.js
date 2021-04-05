@@ -41,7 +41,7 @@ class ParkourGame extends ParkourHeadlessGame {
 
     async loop() {
 
-        const model = await tf.loadGraphModel('/model.json');
+        const model = await tf.loadGraphModel('/teach_DRL_demo/model.json');
 
         setInterval(() => {
             this.play(model);
