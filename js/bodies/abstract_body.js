@@ -17,19 +17,19 @@ class AbstractBody {
             let motor_info = motor.GetUserData();
             if(motor_info.check_contact){
                 let s = [
-                    motor.angle + motor_info.angle_correction,
-                    motor.speed / motor_info.speed_control,
+                    motor.GetJointAngle() + motor_info.angle_correction,
+                    motor.GetJointSpeed() / motor_info.speed_control,
                     0.0
                 ]
                 if(motor_info.contact_body.GetUserData().has_contact){
                     s[2] = 1.0;
                 }
-                state.push(s);
+                state = state.concat(s);
             }
             else{
-                state.push([
-                    motor.angle + motor_info.angle_correction,
-                    motor.speed / motor_info.speed_control
+                state = state.concat([
+                    motor.GetJointAngle() + motor_info.angle_correction,
+                    motor.GetJointSpeed() / motor_info.speed_control
                 ])
             }
         }

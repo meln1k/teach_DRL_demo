@@ -3,7 +3,6 @@ function ContactDetector (env){
     this.water_contact_detector = new WaterContactDetector();
     this.climbing_contact_detector = new ClimbingContactDetector();
     this.env = env;
-    this.joints_to_add = [];
 }
 
 ContactDetector.prototype = Object.create(b2.ContactListener.prototype);
@@ -57,22 +56,30 @@ ContactDetector.prototype.EndContact = function (contact){
     }
 };
 
+ContactDetector.prototype.Reset = function (){
+    this.water_contact_detector.Reset();
+    this.climbing_contact_detector.Reset();
+}
+
 
 function LidarCallback(agent_mask_filter){
     b2.RayCastCallback.call(this);
     this.agent_mask_filter = agent_mask_filter;
     this.fixture = null;
     this.is_water_detected = false;
+    this.is_creeper_detected = false;
 };
 
 LidarCallback.prototype = Object.create(b2.RayCastCallback.prototype);
 LidarCallback.prototype.constructor = LidarCallback;
 LidarCallback.prototype.ReportFixture = function (fixture, point, normal, fraction){
-    if(fixture.GetFilterData().categoryBits & this.agent_mask_filter == 0){
+    if((fixture.GetFilterData().categoryBits & this.agent_mask_filter) == 0){
         return -1;
     }
 
     this.p2 = point;
     this.fraction = fraction;
-    this.is_water_detected = fixture.GetBody().GetUserData().object_type == CustomUserDataObjectTypes.WATER ? true : false;
+    this.is_water_detected = fixture.GetBody().GetUserData().object_type == CustomUserDataObjectTypes.WATER;
+    this.is_creeper_detected = fixture.GetBody().GetUserData().object_type == CustomUserDataObjectTypes.SENSOR_GRIP_TERRAIN;
+    return fraction;
 }

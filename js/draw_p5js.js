@@ -7,7 +7,7 @@ let JOINTS_COLORS = {
 };
 
 function setup() {
-    let myCanvas = createCanvas(VIEWPORT_W, VIEWPORT_H);
+    let myCanvas = createCanvas(RENDERING_VIEWER_W, RENDERING_VIEWER_H);
     myCanvas.parent("canvas_container");
     background(220);
     noLoop();
@@ -32,7 +32,7 @@ function draw() {
     pop();
     /*let mid_line = [
         [-100, VIEWPORT_H/2],
-        [VIEWPORT_W + 100, VIEWPORT_H/2]
+        [RENDERING_VIEWER_W + 100, VIEWPORT_H/2]
     ];
     drawLine(mid_line, "#FF0000");*/
 }
@@ -87,8 +87,8 @@ function drawParkour(parkour){
     let vertices = [
         [0, 0],
         [0, VIEWPORT_H/2 - VIEWPORT_H/2 * parkour.zoom + parkour.water_level * VIEWPORT_H * parkour.zoom],
-        [VIEWPORT_W, VIEWPORT_H/2 - VIEWPORT_H/2 * parkour.zoom + parkour.water_level * VIEWPORT_H * parkour.zoom],
-        [VIEWPORT_W, 0]
+        [RENDERING_VIEWER_W, VIEWPORT_H/2 - VIEWPORT_H/2 * parkour.zoom + parkour.water_level * VIEWPORT_H * parkour.zoom],
+        [RENDERING_VIEWER_W, 0]
     ];
     drawPolygon(vertices, "#77ACE5");
 
@@ -130,7 +130,7 @@ function drawParkour(parkour){
     for(let i = 0; i < parkour.background_polys.length; i++) {
         let poly = parkour.background_polys[i];
         //let pos = poly.vertices[0][0] * parkour.zoom - parkour.scroll_offset;
-        //if(pos >= -0.01 * VIEWPORT_W && pos < VIEWPORT_W){
+        //if(pos >= -0.01 * RENDERING_VIEWER_W && pos < RENDERING_VIEWER_W){
             drawPolygon(poly.vertices, poly.color);
         //}
 
@@ -145,7 +145,7 @@ function drawParkour(parkour){
         /*let pos = poly.body.GetPosition();
         let w_pos = poly.body.GetWorldPoint(pos);
         let x_pos = w_pos.x/parkour.zoom - parkour.scroll_offset;
-        if(x_pos >= -0.01 * VIEWPORT_W && x_pos < VIEWPORT_W){*/
+        if(x_pos >= -0.01 * RENDERING_VIEWER_W && x_pos < RENDERING_VIEWER_W){*/
             if(poly.type == "creeper"){
                 for(let i = 0; i < shape.m_count; i++){
                     let world_pos = poly.body.GetWorldPoint(shape.m_vertices[i]);

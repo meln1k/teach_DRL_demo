@@ -32,7 +32,7 @@ class OldClassicBipedalBody extends WalkerAbstractBody{
         let HULL_FIXTURES = [];
         let fd_polygon;
         let vertices;
-        let y_offset = 10/this.SCALE;
+        let y_offset = 0//10/this.SCALE;
 
         for(let polygon of HULL_POLYGONS){
             fd_polygon = new b2.FixtureDef();
@@ -74,7 +74,7 @@ class OldClassicBipedalBody extends WalkerAbstractBody{
         }
         hull.color1 = "#806682"; // [0.5, 0.4, 0.9]
         hull.color2 = "#4D4D80"; // [0.3, 0.3, 0.5]
-        hull.ApplyForceToCenter(new b2.Vec2(force_to_center, 0), true);
+        //hull.ApplyForceToCenter(new b2.Vec2(force_to_center, 0), true);
         hull.SetUserData(new CustomBodyUserData(true, this.reset_on_hull_critical_contact, "hull"));
         this.body_parts.push(hull);
         this.reference_head_object = hull;
@@ -97,8 +97,8 @@ class OldClassicBipedalBody extends WalkerAbstractBody{
             // Leg joint motor
             let leg_rjd = new b2.RevoluteJointDef();
             leg_rjd.Initialize(hull, leg, new b2.Vec2(init_x, init_y - this.LEG_DOWN + y_offset));
-            //leg_rjd.localAnchorA = new b2.Vec2(0, this.LEG_DOWN);
-            //leg_rjd.localAnchorB = new b2.Vec2(0, this.LEG_H / 2);
+            leg_rjd.localAnchorA = new b2.Vec2(0, this.LEG_DOWN);
+            leg_rjd.localAnchorB = new b2.Vec2(0, this.LEG_H / 2);
             leg_rjd.enableMotor = true;
             leg_rjd.enableLimit = true;
             leg_rjd.maxMotorTorque = this.MOTORS_TORQUE;
@@ -124,8 +124,8 @@ class OldClassicBipedalBody extends WalkerAbstractBody{
             // lower joint motor
             let lower_rjd = new b2.RevoluteJointDef();
             lower_rjd.Initialize(leg, lower, new b2.Vec2(init_x, init_y - this.LEG_DOWN - this.LEG_H + y_offset));
-            //lower_rjd.localAnchorA = new b2.Vec2(0, - this.LEG_H / 2);
-            //lower_rjd.localAnchorB = new b2.Vec2(0, this.LEG_H / 2);
+            lower_rjd.localAnchorA = new b2.Vec2(0, - this.LEG_H / 2);
+            lower_rjd.localAnchorB = new b2.Vec2(0, this.LEG_H / 2);
             lower_rjd.enableMotor = true;
             lower_rjd.enableLimit = true;
             lower_rjd.maxMotorTorque = this.MOTORS_TORQUE;
