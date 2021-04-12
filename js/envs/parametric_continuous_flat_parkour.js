@@ -45,7 +45,7 @@ class ParametricContinuousFlatParkour {
             this.lidar_y_offset = 0;
         }
 
-        this.seed();
+        //this.seed();
         this.viewer = null;
         this.config = config;
         /*this.main_screen = document.getElementById(config.canvas_id);
@@ -54,7 +54,6 @@ class ParametricContinuousFlatParkour {
         }*/
         this.scale = SCALE;
         this.zoom = 1;
-        this.render_change = true;
 
         let gravity = new b2.Vec2(0, -10);
         this.world = new b2.World(gravity);
@@ -107,7 +106,7 @@ class ParametricContinuousFlatParkour {
     }
 
     _destroy(){
-        this.world.contactListener = null;
+        this.world.SetContactListener(null);
         for(let t of this.terrain){
             this.world.DestroyBody(t);
         }
@@ -616,12 +615,10 @@ class ParametricContinuousFlatParkour {
 
     set_scroll_offset(slider_value){
         this.scroll_offset = slider_value/100 * (TERRAIN_LENGTH * TERRAIN_STEP * SCALE * this.zoom - RENDERING_VIEWER_W * 0.9) - RENDERING_VIEWER_W * 0.05;
-        this.render_change = true;
     }
 
     set_zoom(scale){
         this.zoom = scale;
-        this.render_change = true;
     }
 
     //endregion

@@ -14,27 +14,43 @@ function setup() {
     //frameRate(30);
 }
 
-function draw() {
-    let parkour = window.game.env;
+function componentToHex(c) {
+    let hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
 
-    push();
-    drawParkour(parkour);
-    drawAgent(parkour.agent_body, parkour.scale);
-    if(window.draw_lidars){
-        drawLidars(parkour.lidar, parkour.scale);
-    }
-
-
-    if(window.draw_joints){
-        drawJoints(parkour.creepers_joints, parkour.scale);
-        drawJoints(parkour.agent_body.motors, parkour.scale);
-    }
-    pop();
-    /*let mid_line = [
-        [-100, VIEWPORT_H/2],
-        [RENDERING_VIEWER_W + 100, VIEWPORT_H/2]
+function rgbToHex(rgb) {
+    return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
+}
+function hexToRgb(hex) {
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    let rgb = [
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16)
     ];
-    drawLine(mid_line, "#FF0000");*/
+    return result ? rgb : null;
+}
+
+function draw() {
+    if(window.game != null){
+        let parkour = window.game.env;
+
+        push();
+        drawParkour(parkour);
+        drawAgent(parkour, parkour.scale);
+
+        if(window.draw_lidars){
+            drawLidars(parkour.lidar, parkour.scale);
+        }
+
+        if(window.draw_joints){
+            drawJoints(parkour.creepers_joints, parkour.scale);
+            drawJoints(parkour.agent_body.motors, parkour.scale);
+        }
+        pop();
+    }
+
 }
 
 function drawJoints(joints, scale){
@@ -44,15 +60,15 @@ function drawJoints(joints, scale){
         noStroke();
         let joint_type = joints[i].GetUserData().name;
         fill(JOINTS_COLORS[joint_type]);
-        let radius = joint_type == "creeper" ? 4 : 7;
+        let radius = joint_type == "creeper" ? 5 : 7;
         circle(posA.x, VIEWPORT_H - posA.y, radius/scale);
         circle(posB.x, VIEWPORT_H - posB.y, radius/scale);
 
     }
 }
 
-function drawAgent(agent, scale){
-    let polys = agent.get_elements_to_render();
+function drawAgent(parkour, scale){
+    let polys = parkour.agent_body.get_elements_to_render();
     for(let poly of polys){
         let shape = poly.GetFixtureList().GetShape();
         let vertices = [];
@@ -62,7 +78,13 @@ function drawAgent(agent, scale){
         }
         strokeWeight(2/scale);
         stroke(poly.color2);
-        drawPolygon(vertices, poly.color1);
+        let color1 = poly.color1;
+        if(poly == parkour.agent_body.reference_head_object){
+            let rgb01 = hexToRgb(poly.color1).map(c => c / 255);
+            let rgb255 = parkour.color_agent_head(rgb01, poly.color2)[0].map(c => Math.round(c * 255));
+            color1 = rgbToHex(rgb255);
+        }
+        drawPolygon(vertices, color1);
 
     }
 }
@@ -83,20 +105,17 @@ function drawParkour(parkour){
     noStroke();
     drawPolygon(parkour.sky_poly.vertices, parkour.sky_poly.color);
 
-    // Water
-    let vertices = [
+    // Flat Parkour -- Water
+    /*let vertices = [
         [0, 0],
         [0, VIEWPORT_H/2 - VIEWPORT_H/2 * parkour.zoom + parkour.water_level * VIEWPORT_H * parkour.zoom],
         [RENDERING_VIEWER_W, VIEWPORT_H/2 - VIEWPORT_H/2 * parkour.zoom + parkour.water_level * VIEWPORT_H * parkour.zoom],
         [RENDERING_VIEWER_W, 0]
-    ];
-    drawPolygon(vertices, "#77ACE5");
+    ];*/
 
-    // Translation to scroll horizontally
-    translate(- parkour.scroll_offset, 0);
 
-    // Top and bottom strips to fill ground and ceiling
-    if(parkour.zoom < 1){
+    // Flat Parkour -- Top and bottom strips to fill ground and ceiling
+    /*if(parkour.zoom < 1){
 
         // ground
         vertices = [
@@ -115,8 +134,10 @@ function drawParkour(parkour){
             [0, VIEWPORT_H/2 + VIEWPORT_H/2 * parkour.zoom]
         ];
         drawPolygon(vertices, "#808080");
-    }
+    }*/
 
+    // Translation to scroll horizontally and vertically
+    translate(- parkour.scroll[0], parkour.scroll[1]);
 
     // Rescaling
     scale(parkour.scale);
@@ -124,13 +145,30 @@ function drawParkour(parkour){
 
     // Translating so that the environment is always horizontally centered
     translate(0, (1 - parkour.scale * parkour.zoom) * VIEWPORT_H/(parkour.scale * parkour.zoom));
-    translate(0, -(1 - parkour.zoom) * VIEWPORT_H/2/SCALE/parkour.zoom);
+    translate(0, (parkour.zoom - 1) * (parkour.ceiling_offset)/parkour.zoom * 1/3);
+
+
+
+    // Flat Parkour
+    //translate(0, (parkour.zoom - 1) * VIEWPORT_H/2/parkour.scale/parkour.zoom);
+
+    // Water
+    let vertices = [
+        [-RENDERING_VIEWER_W, -VIEWPORT_H],
+        [-RENDERING_VIEWER_W, parkour.water_y],
+        [2 * RENDERING_VIEWER_W, parkour.water_y],
+        [2 * RENDERING_VIEWER_W, -VIEWPORT_H]
+    ];
+    noStroke();
+    drawPolygon(vertices, "#77ACE5");
+
 
     // Draw all background elements
     for(let i = 0; i < parkour.background_polys.length; i++) {
         let poly = parkour.background_polys[i];
         //let pos = poly.vertices[0][0] * parkour.zoom - parkour.scroll_offset;
         //if(pos >= -0.01 * RENDERING_VIEWER_W && pos < RENDERING_VIEWER_W){
+            noStroke();
             drawPolygon(poly.vertices, poly.color);
         //}
 
@@ -152,7 +190,7 @@ function drawParkour(parkour){
                     vertices.push([world_pos.x, world_pos.y]);
                 }
                 noStroke();
-                drawPolygon(vertices, poly.color);
+                drawPolygon(vertices, poly.color1);
             }
             else{
                 let v1 = poly.body.GetWorldPoint(shape.m_vertex1);
