@@ -51,6 +51,11 @@
 
 
     <div>
+        <form onsubmit="return false">
+            <label for="models">Choose a model to load:</label>
+            <select name="models" id="models">
+            </select>
+        </form>
         <div class="buttonscontainer ib">
             <button id="runButton"> Start </button>
             <button id="resetButton"> Reset Simulation </button>
@@ -157,6 +162,8 @@
 </body>
 
 <script>
+
+
     function init(cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type) {
         let canvas_id = 'main_screen2';
 
@@ -166,19 +173,39 @@
         window.game.env.render();
     }
 
+    function addAgentModel(modelName) {
+        const x = document.getElementById("models");
+        const option = document.createElement("option");
+        option.text = modelName;
+        x.add(option);
+    }
+
+    async function renderAgentModelSelector() {
+        fetch(`./models.csv`)
+            .then(resp => resp.text().then(body => body.split(",")))
+            .then(models => {
+                models.forEach(model => {
+                    addAgentModel(model);
+                });
+            })
+    }
+
     async function loadModel(){
+        await renderAgentModelSelector();
         window.cppn_model = await tf.loadGraphModel('./js/CPPN/weights/same_ground_ceiling_cppn/tfjs_model/model.json');
         let cppn_input_vector = [dim1Slider.value, dim2Slider.value, dim3Slider.value];
         init(cppn_input_vector, waterSlider.value, creepersWidthSlider.value, creepersHeightSlider.value, creepersSpacingSlider.value, smoothingSlider.value);
     }
 
+    
     window.addEventListener("load", loadModel, false);
 
     /* BUTTONS AND SLIDERS */
 
     let runButton = document.getElementById("runButton");
     runButton.onclick = function (){
-        this.innerText = window.game.run();
+        const policy = document.getElementById("models").value;
+         window.game.run(policy).then(text => this.innerText = text);
     }
 
     let resetButton = document.getElementById("resetButton");

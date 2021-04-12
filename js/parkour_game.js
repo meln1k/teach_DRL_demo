@@ -50,23 +50,22 @@ class ParkourGame extends ParkourHeadlessGame {
         this.nb_steps = 0;
         this.done = false;
         this.running = false;
-
-        this.loadPolicy();
     }
 
-    async loadPolicy(){
-        this.policy_model = await tf.loadGraphModel('./js/bodies/policy_models/model.json');
-    }
 
-    run(){
+    async run(policy){
         if(this.running){
             clearInterval(this.runtime);
             this.running = false;
             return "Resume";
-        }
-        else{
+        } else {
+
+            console.log("loading policy", policy)
+            
+            const model = await tf.loadGraphModel(`./models/${policy}/model.json`);
+
             this.runtime = setInterval(() => {
-                this.play(this.policy_model);
+                this.play(model);
             }, 1000 / this.config.draw_fps);
             this.running = true;
             return "Pause"
@@ -92,12 +91,15 @@ class ParkourGame extends ParkourHeadlessGame {
             verbose: false
         }
 
-        let input = tf.tensor(state,[1, 36])
+        let envState = tf.tensor(state,[1, 36]);
 
-        let actions = model.predict([tf.tensor([0,0,0,0], [1, 4]), input], config)[0].arraySync()[0];
-        //let actions = Array.from({length: this.nb_actions}, () => Math.random() * 2 - 1);
-
-        console.log("actions", actions);
+        let inputs = {
+            "Placeholder_1:0": envState, 
+            "Placeholder_2:0": tf.tensor([0,0,0,0], [1, 4])
+        };
+        // super-hacky workaround to find the tensor with actions
+        // todo: fix this ASAP
+        let actions = model.predict(inputs, config).find(elem => JSON.stringify(elem.shape) === "[1,4]").arraySync()[0];
 
         let ret = this.env.step(actions, 1);
         this.obs.push(ret[0]);
