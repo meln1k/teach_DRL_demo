@@ -100,41 +100,37 @@ function drawLidars(lidars, scale){
     }
 }
 
-function drawParkour(parkour){
+function drawSkyClouds(parkour){
+    push();
+
     // Sky
     noStroke();
     drawPolygon(parkour.sky_poly.vertices, parkour.sky_poly.color);
 
-    // Flat Parkour -- Water
-    /*let vertices = [
-        [0, 0],
-        [0, VIEWPORT_H/2 - VIEWPORT_H/2 * parkour.zoom + parkour.water_level * VIEWPORT_H * parkour.zoom],
-        [RENDERING_VIEWER_W, VIEWPORT_H/2 - VIEWPORT_H/2 * parkour.zoom + parkour.water_level * VIEWPORT_H * parkour.zoom],
-        [RENDERING_VIEWER_W, 0]
-    ];*/
+    // Translation to scroll horizontally and vertically
+    translate(- parkour.scroll[0]/3, parkour.scroll[1]/3);
 
+    // Rescaling
+    scale(parkour.scale);
+    scale(parkour.zoom);
 
-    // Flat Parkour -- Top and bottom strips to fill ground and ceiling
-    /*if(parkour.zoom < 1){
+    // Translating so that the environment is always horizontally centered
+    translate(0, (1 - parkour.scale * parkour.zoom) * VIEWPORT_H/(parkour.scale * parkour.zoom));
+    translate(0, (parkour.zoom - 1) * (parkour.ceiling_offset)/parkour.zoom * 1/3);
 
-        // ground
-        vertices = [
-            [0, 0],
-            [(TERRAIN_LENGTH - 1) * TERRAIN_STEP * parkour.scale * parkour.zoom, 0],
-            [(TERRAIN_LENGTH - 1) * TERRAIN_STEP * parkour.scale * parkour.zoom, VIEWPORT_H/2 - VIEWPORT_H/2 * parkour.zoom],
-            [0, VIEWPORT_H/2 - VIEWPORT_H/2 * parkour.zoom]
-        ];
-        drawPolygon(vertices, "#66994D");
+    // Clouds
+    for(let cloud of parkour.cloud_polys){
+        //if(cloud.x1 >= parkour.scroll[0]/2 && cloud.x1 <= parkour.scroll[0]/2 + RENDERING_VIEWER_W/parkour.scale){
+        noStroke();
+        drawPolygon(cloud.poly, "#FFFFFF");
+    }
 
-        // ceiling
-        vertices = [
-            [0, VIEWPORT_H],
-            [(TERRAIN_LENGTH - 1) * TERRAIN_STEP * parkour.scale * parkour.zoom, VIEWPORT_H],
-            [(TERRAIN_LENGTH - 1) * TERRAIN_STEP * parkour.scale * parkour.zoom, VIEWPORT_H/2 + VIEWPORT_H/2 * parkour.zoom],
-            [0, VIEWPORT_H/2 + VIEWPORT_H/2 * parkour.zoom]
-        ];
-        drawPolygon(vertices, "#808080");
-    }*/
+    pop();
+}
+
+function drawParkour(parkour){
+    // Sky & clouds
+    drawSkyClouds(parkour);
 
     // Translation to scroll horizontally and vertically
     translate(- parkour.scroll[0], parkour.scroll[1]);
@@ -146,11 +142,6 @@ function drawParkour(parkour){
     // Translating so that the environment is always horizontally centered
     translate(0, (1 - parkour.scale * parkour.zoom) * VIEWPORT_H/(parkour.scale * parkour.zoom));
     translate(0, (parkour.zoom - 1) * (parkour.ceiling_offset)/parkour.zoom * 1/3);
-
-
-
-    // Flat Parkour
-    //translate(0, (parkour.zoom - 1) * VIEWPORT_H/2/parkour.scale/parkour.zoom);
 
     // Water
     let vertices = [

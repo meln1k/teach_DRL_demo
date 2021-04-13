@@ -409,7 +409,7 @@ class ParametricContinuousParkour {
 
     generate_game(){
         this._generate_terrain();
-        //this._generate_clouds();
+        this._generate_clouds();
         this._generate_agent();
     }
 
@@ -667,12 +667,12 @@ class ParametricContinuousParkour {
     }
 
     _generate_clouds(){
-        this.cloud_poly = [];
+        this.cloud_polys = [];
         for(let i = 0; i < Math.ceil(TERRAIN_LENGTH/20); i++){
-          let x = (Math.random() * (0 - TERRAIN_LENGTH) + TERRAIN_LENGTH) * TERRAIN_STEP;
-          let y = VIEWPORT_H/SCALE * 3/4;
+          let x = (Math.random() * 3 * TERRAIN_LENGTH - TERRAIN_LENGTH) * TERRAIN_STEP;
+          let y = Math.random() * RENDERING_VIEWER_H/SCALE + RENDERING_VIEWER_H/SCALE * 2/5;
           let poly = [];
-          for(let a = 0; a < 5; a++){
+          for(let a = 0; a < 10; a++){
             poly.push([
                 x + 15 * TERRAIN_STEP * Math.sin(Math.PI * 2 * a / 5) + Math.random() * (0 - 5 * TERRAIN_STEP) + 5 * TERRAIN_STEP,
                 y + 5 * TERRAIN_STEP * Math.cos(Math.PI * 2 * a / 5) + Math.random() * (0 - 5 * TERRAIN_STEP) + 5 * TERRAIN_STEP
@@ -680,7 +680,7 @@ class ParametricContinuousParkour {
           }
           let x1 = Math.min(...poly.map(p => p[0]));
           let x2 = Math.max(...poly.map(p => p[0]));
-          this.cloud_poly.push([poly, x1, x2]);
+          this.cloud_polys.push({poly: poly, x1: x1, x2: x2});
         }
     }
 
@@ -697,11 +697,18 @@ class ParametricContinuousParkour {
     }
 
     set_scroll(h, v){
-        window.follow_agent = false;
-        this.scroll = [
-            parseFloat(h)/100 * ((TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP * this.scale * this.zoom - RENDERING_VIEWER_W * 0.9) - RENDERING_VIEWER_W * 0.05,
-            parseFloat(v)/100 * this.air_max_distance/2 * this.scale * this.zoom
-        ];
+        if(window.follow_agent){
+            this.scroll = [
+                this.agent_body.reference_head_object.GetPosition().x * this.scale * this.zoom - RENDERING_VIEWER_W/5,
+                this.agent_body.reference_head_object.GetPosition().y * this.scale * this.zoom - RENDERING_VIEWER_H/3
+            ];
+        }
+        else{
+            this.scroll = [
+                parseFloat(h)/100 * ((TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP * this.scale * this.zoom - RENDERING_VIEWER_W * 0.9) - RENDERING_VIEWER_W * 0.05,
+                parseFloat(v)/100 * this.air_max_distance/2 * this.scale * this.zoom
+            ];
+        }
     }
 
     set_zoom(zoom){
