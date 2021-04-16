@@ -91,8 +91,7 @@ class ParkourGame extends ParkourHeadlessGame {
             let envState = tf.tensor(state,[1, 36]);
 
             let inputs = {
-                "Placeholder_1:0": envState,
-                "Placeholder_2:0": tf.tensor([0,0,0,0], [1, 4])
+                "Placeholder_1:0": envState
             };
 
             let output = 'main/mul:0'
