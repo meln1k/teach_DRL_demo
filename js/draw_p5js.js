@@ -9,7 +9,7 @@ let JOINTS_COLORS = {
 function setup() {
     let myCanvas = createCanvas(RENDERING_VIEWER_W, RENDERING_VIEWER_H);
     myCanvas.parent("canvas_container");
-    background(220);
+    background("#e6e6ff");
     noLoop();
     //frameRate(30);
 }
@@ -33,6 +33,8 @@ function hexToRgb(hex) {
 }
 
 function draw() {
+    //background("#e6e6ff");
+    background("#E6F0FF");
     if(window.game != null){
         let parkour = window.game.env;
 
@@ -41,7 +43,7 @@ function draw() {
         drawAgent(parkour, parkour.scale);
 
         if(window.draw_lidars){
-            drawLidars(parkour.lidar, parkour.scale);
+            //drawLidars(parkour.lidar, parkour.scale);
         }
 
         if(window.draw_joints){
@@ -104,8 +106,14 @@ function drawSkyClouds(parkour){
     push();
 
     // Sky
+    let vertices = [
+        [0, 0],
+        [0, RENDERING_VIEWER_H],
+        [RENDERING_VIEWER_W, RENDERING_VIEWER_H],
+        [RENDERING_VIEWER_W, 0]
+    ];
     noStroke();
-    drawPolygon(parkour.sky_poly.vertices, parkour.sky_poly.color);
+    //drawPolygon(vertices, "#e6e6ff");
 
     // Translation to scroll horizontally and vertically
     translate(- parkour.scroll[0]/3, parkour.scroll[1]/3);
@@ -145,10 +153,10 @@ function drawParkour(parkour){
 
     // Water
     let vertices = [
-        [-RENDERING_VIEWER_W, -VIEWPORT_H],
+        [-RENDERING_VIEWER_W, -RENDERING_VIEWER_H],
         [-RENDERING_VIEWER_W, parkour.water_y],
         [2 * RENDERING_VIEWER_W, parkour.water_y],
-        [2 * RENDERING_VIEWER_W, -VIEWPORT_H]
+        [2 * RENDERING_VIEWER_W, -RENDERING_VIEWER_H]
     ];
     noStroke();
     drawPolygon(vertices, "#77ACE5");

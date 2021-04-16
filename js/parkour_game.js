@@ -10,7 +10,9 @@ class ParkourHeadlessGame {
 
     initWorld(cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type) {
 
-        this.env = new ParametricContinuousParkour("old_classic_bipedal",
+        let agent_body_type = "old_classic_bipedal";
+        //let agent_body_type = "climbing_profile_chimpanzee";
+        this.env = new ParametricContinuousParkour(agent_body_type,
                                                     3,
                                                     10,
                                                     200,
@@ -83,23 +85,31 @@ class ParkourGame extends ParkourHeadlessGame {
      * Play one step
      */
     play(model) {
-
-        let state = this.obs[this.obs.length - 1];
-
-        let config = {
-            batchSize: 32,
-            verbose: false
+        let actions = [];
+        if(this.env.agent_body.body_type == BodyTypesEnum.CLIMBER){
+            actions = Array.from({length: this.env.agent_body.get_action_size()}, () => 0/*Math.random() * 2 - 1*/);
+            for(let i = 0; i < this.env.agent_body.sensors.length; i++) {
+                actions[actions.length - i - 1] = 1;
+            }
         }
+        else{
+            let state = this.obs[this.obs.length - 1];
 
-        let envState = tf.tensor(state,[1, 36]);
+            let config = {
+                batchSize: 32,
+                verbose: false
+            }
 
-        let inputs = {
-            "Placeholder_1:0": envState, 
-            "Placeholder_2:0": tf.tensor([0,0,0,0], [1, 4])
-        };
-        // super-hacky workaround to find the tensor with actions
-        // todo: fix this ASAP
-        let actions = model.predict(inputs, config).find(elem => JSON.stringify(elem.shape) === "[1,4]").arraySync()[0];
+            let envState = tf.tensor(state,[1, 36]);
+
+            let inputs = {
+                "Placeholder_1:0": envState,
+                "Placeholder_2:0": tf.tensor([0,0,0,0], [1, 4])
+            };
+            // super-hacky workaround to find the tensor with actions
+            // todo: fix this ASAP
+            actions = model.predict(inputs, config).find(elem => JSON.stringify(elem.shape) === "[1,4]").arraySync()[0];
+        }
 
         let ret = this.env.step(actions, 1);
         this.obs.push(ret[0]);

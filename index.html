@@ -26,9 +26,11 @@
 
     <script defer src ="./js/bodies/bodies_enum.js"></script>
     <script defer src ="./js/bodies/abstract_body.js"></script>
-    <script defer src ="./js/bodies/walker_abstract_body.js"></script>
-    <script defer src ="./js/bodies/old_classic_bipedal_body.js"></script>
-    <script defer src ="./js/bodies/classic_bipedal_body.js"></script>
+    <script defer src ="js/bodies/walkers/walker_abstract_body.js"></script>
+    <script defer src ="js/bodies/walkers/old_classic_bipedal_body.js"></script>
+    <script defer src ="js/bodies/walkers/classic_bipedal_body.js"></script>
+    <script defer src ="js/bodies/climbers/climber_abstract_body.js"></script>
+    <script defer src ="js/bodies/climbers/climbing_profile_chimpanzee.js"></script>
 
     <script defer src ="js/CPPN/cppn.js"></script>
     <script defer src="js/envs/parametric_continuous_parkour.js"></script>
@@ -67,6 +69,11 @@
             <select name="models" id="models">
             </select>
         </form>
+        <div class="ib">
+            <p>Resize the canvas: </p>
+            <input type="range" min="1" max="2" value="1" class="slider" id="resizeCanvasSlider">
+        </div>
+
     </div>
 
     <hr>
@@ -88,7 +95,7 @@
 
         <div>
             <p>Zoom:</p>
-            <input type="range" min="0.3" max="1.25" value="1" class="slider" id="zoomSlider">
+            <input type="range" min="0.3" max="1.5" value="1" class="slider" id="zoomSlider">
             <span id="zoomValue"></span>
             <button id="resetZoom">Reset</button>
         </div>
@@ -112,7 +119,7 @@
             </div>
             <div class="slidecontainer">
                 <span>Smoothing: </span>
-                <input type="range" min="10" max="20" value="15" class="slider" id="smoothingSlider">
+                <input type="range" min="10" max="40" value="20" class="slider" id="smoothingSlider">
                 <span id="smoothingValue"></span>
             </div>
             <div class="slidecontainer">
@@ -166,7 +173,7 @@
         let canvas_id = 'main_screen2';
 
         window.game = new ParkourGame(config, canvas_id, cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type);
-        window.game.env.set_zoom(zoomSlider.value);
+        window.game.env.set_zoom(parseFloat(zoomSlider.value) * parseFloat(resizeCanvasSlider.value));
         window.game.env.set_scroll(hScrollSlider.value, vScrollSlider.value);
         window.game.env.render();
     }
@@ -220,7 +227,7 @@
                             creepersSpacingSlider.value,
                             smoothingSlider.value,
                             getCreepersType());
-        window.game.env.set_zoom(zoomSlider.value);
+        window.game.env.set_zoom(parseFloat(zoomSlider.value) * parseFloat(resizeCanvasSlider.value));
         window.game.env.set_scroll(hScrollSlider.value, vScrollSlider.value);
         window.game.env.render();
     }
@@ -246,6 +253,15 @@
             window.game.env.set_scroll(0, 0);
         }
         window.game.env.render();
+    }
+
+    let resizeCanvasSlider = document.getElementById("resizeCanvasSlider");
+    resizeCanvasSlider.step = 0.01;
+    resizeCanvasSlider.value = 1;
+    resizeCanvasSlider.oninput = function() {
+        window.game.env._SET_RENDERING_VIEWPORT_SIZE(VIEWPORT_W * 2 * parseFloat(this.value), RENDERING_VIEWER_H, true);
+        window.game.env.set_zoom(parseFloat(this.value) * parseFloat(zoomSlider.value));
+        resizeCanvas(RENDERING_VIEWER_W, RENDERING_VIEWER_H);
     }
 
     /* SCROLL AND ZOOM */
@@ -298,7 +314,7 @@
     zoomValue.innerHTML = "x" + zoomSlider.value; // Display the default slider value
     zoomSlider.oninput = function() {
         zoomValue.innerHTML = "x" + this.value;
-        window.game.env.set_zoom(this.value);
+        window.game.env.set_zoom(parseFloat(this.value) * parseFloat(resizeCanvasSlider.value));
         window.game.env.set_scroll(hScrollSlider.value, vScrollSlider.value);
         window.game.env.render();
     }
@@ -306,7 +322,7 @@
     resetZoom.onclick = function(){
         zoomSlider.value = 1;
         zoomValue.innerHTML = "x1";
-        window.game.env.set_zoom(1);
+        window.game.env.set_zoom(1 * parseFloat(resizeCanvasSlider.value));
         window.game.env.set_scroll(hScrollSlider.value, vScrollSlider.value);
         window.game.env.render();
     }
@@ -442,7 +458,7 @@
     // smoothing slider
     let smoothingSlider = document.getElementById("smoothingSlider");
     smoothingSlider.step = 0.01;
-    smoothingSlider.value = 15;
+    smoothingSlider.value = 20;
     let smoothingValue = document.getElementById("smoothingValue");
     smoothingValue.innerHTML = smoothingSlider.value; // Display the default slider value
     smoothingSlider.oninput = function() {

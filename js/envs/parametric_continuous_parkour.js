@@ -58,15 +58,22 @@ class ParametricContinuousParkour {
 
         // Create agent
         // TODO: body types enum + walker_args
-        this.agent_body = new OldClassicBipedalBody(SCALE);
-        //this.agent_body = new ClassicBipedalBody(SCALE, /*walker_args*/);
+        if(agent_body_type == "classic_bipedal"){
+            this.agent_body = new ClassicBipedalBody(SCALE, /*walker_args*/);
+        }
+        if(agent_body_type == "climbing_profile_chimpanzee"){
+            this.agent_body = new ClimbingProfileCHimpanzee(SCALE)
+        }
+        else {
+            this.agent_body = new OldClassicBipedalBody(SCALE);
+        }
 
         // Terrain and dynamics
         this.terrain_bodies = [];
         this.background_polys = []
         // TODO: handle kwargs + Climbing dynamics
         this.water_dynamics = new WaterDynamics(this.world.m_gravity /*, max_push=water_clip*/);
-        //this.climbing_dynamics = ClimbingDynamics();
+        this.climbing_dynamics = new ClimbingDynamics();
         this.prev_shaping = null;
         this.episodic_reward = 0;
         this.creepers_joints = [];
@@ -146,7 +153,6 @@ class ParametricContinuousParkour {
         this.prev_shaping = null;
         //this.scroll = [- 0.05 * RENDERING_VIEWER_W, 0];
         this.scroll = [0, 0];
-        this.lidar_render = 0;
         this.water_y = this.GROUND_LIMIT;
         this.nb_steps_outside_water = 0;
         this.nb_steps_under_water = 0;
@@ -160,15 +166,33 @@ class ParametricContinuousParkour {
 
         let actions_to_play = Array.from({length: this.agent_body.motors.length}, () => 0);
         //let actions_to_play = [];
+
         // If embodiment is a climber, make it start hanging on the ceiling using a few steps to let the Box2D solver handle positions.
-        // TODO: climber
-        /*if(this.agent_bod.body_type == BodyTypesEnum.CLIMBER){
+        if(this.agent_body.body_type == BodyTypesEnum.CLIMBER){
             // Init climber
             let y_diff = 0;
             for(let i = 0; i < this.agent_body.sensors.length; i++){
-               //...
+               actions_to_play[actions_to_play.length - i - 1] = 1;
+               // Hang sensor
+                let sensor = this.agent_body.sensors[this.agent_body.sensors.length - i - 1];
+                let sensor_position = sensor.GetPosition();
+                if(y_diff == 0){
+                    y_diff = TERRAIN_HEIGHT + this.ceiling_offset - sensor_position.y;
+                }
+                sensor.SetTransform(new b2.Vec2(sensor_position.x, TERRAIN_HEIGHT + this.ceiling_offset),
+                                    sensor.GetAngle());
             }
-        }*/
+
+            for(let body_part of this.agent_body.body_parts){
+                let body_part_pos = body_part.GetPosition();
+                body_part.SetTransform(new b2Vec2(body_part_pos.x, body_part_pos.y + y_diff),
+                                        body_part.GetAngle());
+            }
+
+            for(let i = 0; i < NB_FIRST_STEPS_HANG; i++){
+                this.step(actions_to_play);
+            }
+        }
 
         let initial_state = this.step(actions_to_play)[0];
         this.nb_steps_outside_water = 0;
@@ -190,16 +214,16 @@ class ParametricContinuousParkour {
 
         // Prepare climbing dynamics according to the actions (i.e. sensor ready to grasp or sensor release destroying joint)
         // TODO: climbing dynamics
-        /*if(this.agent_body.body_type == BodyTypesEnum.CLIMBER){
-            this.climbing_dynamics.before_step_climbing_dynamics(action, this.agent_body, this.world)
-        }*/
+        if(this.agent_body.body_type == BodyTypesEnum.CLIMBER){
+            this.climbing_dynamics.before_step_climbing_dynamics(action, this.agent_body, this.world);
+        }
 
         this.world.Step(1.0 / FPS, 6 * 30, 2 * 30);
 
         // Create joints between sensors ready to grasp if collision with graspable area was detected
-        /*if(this.agent_body.body_type == BodyTypesEnum.CLIMBER){
-            this.climbing_dynamics.after_step_climbing_dynamics(this.world.m_contactManager.m_contactListener, this.world);
-        }*/
+        if(this.agent_body.body_type == BodyTypesEnum.CLIMBER){
+            this.climbing_dynamics.after_step_climbing_dynamics(this.world.m_contactManager.m_contactListener.climbing_contact_detector, this.world);
+        }
 
         // Calculate water physics
         this.water_dynamics.calculate_forces(this.world.m_contactManager.m_contactListener.water_contact_detector.fixture_pairs);
@@ -244,9 +268,9 @@ class ParametricContinuousParkour {
 
         // add sensor-related state
         // TODO
-        /*if(this.agent_body.body_type == BodyTypesEnum.CLIMBER){
+        if(this.agent_body.body_type == BodyTypesEnum.CLIMBER){
             state = state.concat(this.agent_body.get_sensors_state());
-        }*/
+        }
 
         // add lidar-related state with distance and surface detected
         let nb_of_water_detected = 0;
@@ -277,7 +301,7 @@ class ParametricContinuousParkour {
         }
 
         let shaping = 130 * pos.x / SCALE; // moving forward is a way to receive reward (normalized to get 300 on completion)
-        // TODO: remove_reward_on_head_angle
+        // TODO: check if has attribute remove_reward_on_head_angle
         if(this.agent_body.remove_reward_on_head_angle){
             shaping -= 5.0 * Math.abs(state[0]); // keep head straight, other than that and falling, any behavior is unpunished
         }
@@ -342,8 +366,8 @@ class ParametricContinuousParkour {
 
     _SET_RENDERING_VIEWPORT_SIZE(width, height=null, keep_ratio=true){
         RENDERING_VIEWER_W = width;
-        if(keep_ratio || height != null){
-            RENDERING_VIEWER_H = Math.floor(RENDERING_VIEWER_W / (VIEWPORT_W / VIEWPORT_H));
+        if(keep_ratio || height == null){
+            RENDERING_VIEWER_H = Math.floor(RENDERING_VIEWER_W / (2 * VIEWPORT_W / VIEWPORT_H));
         }
         else{
             RENDERING_VIEWER_H = height;
@@ -477,18 +501,6 @@ class ParametricContinuousParkour {
         let poly;
         let poly_data;
 
-        // Sky
-        poly = [
-            [0, 0],
-            [0, RENDERING_VIEWER_H],
-            [RENDERING_VIEWER_W, RENDERING_VIEWER_H],
-            [RENDERING_VIEWER_W, 0]
-        ];
-        this.sky_poly = {
-            color : "#e6e6ff",
-            vertices : poly,
-        };
-
         // Water
         // Fill water from GROUND_LIMIT to highest point of the current ceiling
         //let air_max_distance = Math.max(...this.terrain_ceiling_y) - this.GROUND_LIMIT;
@@ -547,9 +559,15 @@ class ParametricContinuousParkour {
             this.terrain_bodies.push(poly_data);
 
             // Visual poly to fill the ground
-            let l = (i == 0 || i == this.terrain_x.length - 2) ? 0 : 3 * TERRAIN_STEP;
-            poly.push([poly[1][0] + l, this.GROUND_LIMIT]);
-            poly.push([poly[0][0] - l, this.GROUND_LIMIT]);
+            if(i <= this.terrain_x.length / 2){
+                poly.push([poly[1][0] + 10 * TERRAIN_STEP, 2 * this.GROUND_LIMIT]);
+                poly.push([poly[0][0], 2 * this.GROUND_LIMIT]);
+            }
+            else{
+                poly.push([poly[1][0], 2 * this.GROUND_LIMIT]);
+                poly.push([poly[0][0] - 10 * TERRAIN_STEP, 2 * this.GROUND_LIMIT]);
+            }
+
             color = "#66994D"; //[0.4, 0.6, 0.3];
             poly_data = {
                 type : "ground",
@@ -579,8 +597,14 @@ class ParametricContinuousParkour {
             this.terrain_bodies.push(poly_data);
 
             // Visual poly to fill the ceiling
-            poly.push([poly[1][0] + l, 2 * this.CEILING_LIMIT]);
-            poly.push([poly[0][0] - l, 2 * this.CEILING_LIMIT]);
+            if(i <= this.terrain_x.length / 2){
+                poly.push([poly[1][0] + 10 * TERRAIN_STEP, 2 * this.CEILING_LIMIT]);
+                poly.push([poly[0][0], 2 * this.CEILING_LIMIT]);
+            }
+            else{
+                poly.push([poly[1][0], 2 * this.CEILING_LIMIT]);
+                poly.push([poly[0][0] - 10 * TERRAIN_STEP, 2 * this.CEILING_LIMIT]);
+            }
             color = "#808080"; // [0.5, 0.5, 0.5];
             poly_data = {
                 type : "ceiling",
@@ -707,6 +731,7 @@ class ParametricContinuousParkour {
             this.scroll = [
                 parseFloat(h)/100 * ((TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP * this.scale * this.zoom - RENDERING_VIEWER_W * 0.9) - RENDERING_VIEWER_W * 0.05,
                 parseFloat(v)/100 * this.air_max_distance/2 * this.scale * this.zoom
+                //parseFloat(v)/100 * RENDERING_VIEWER_H
             ];
         }
     }
