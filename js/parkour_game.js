@@ -38,13 +38,6 @@ class ParkourHeadlessGame {
 
 }
 
-
-
-tf.registerOp('RandomStandardNormal', (node) => {
-    const result = tf.randomNormal(node.inputs[0].shape, node.attrs['mean'], node.attrs['stdDev'], node.attrs['dtype'], node.attrs['seed'])
-    return result.reshape([2,-1]);
-})
-
 class ParkourGame extends ParkourHeadlessGame {
     constructor(config, canvas_id, cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type) {
         config.canvas_id = canvas_id;
@@ -95,20 +88,16 @@ class ParkourGame extends ParkourHeadlessGame {
         else{
             let state = this.obs[this.obs.length - 1];
 
-            let config = {
-                batchSize: 32,
-                verbose: false
-            }
-
             let envState = tf.tensor(state,[1, 36]);
 
             let inputs = {
                 "Placeholder_1:0": envState,
                 "Placeholder_2:0": tf.tensor([0,0,0,0], [1, 4])
             };
-            // super-hacky workaround to find the tensor with actions
-            // todo: fix this ASAP
-            actions = model.predict(inputs, config).find(elem => JSON.stringify(elem.shape) === "[1,4]").arraySync()[0];
+
+            let output = 'main/mul:0'
+              
+            actions = model.execute(inputs, output).arraySync()[0];
         }
 
         let ret = this.env.step(actions, 1);
