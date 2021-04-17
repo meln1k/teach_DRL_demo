@@ -219,6 +219,7 @@ class ParametricContinuousParkour {
         }
 
         this.world.Step(1.0 / FPS, 6 * 30, 2 * 30);
+        //this.render();
 
         // Create joints between sensors ready to grasp if collision with graspable area was detected
         if(this.agent_body.body_type == BodyTypesEnum.CLIMBER){

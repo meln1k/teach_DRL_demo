@@ -1,9 +1,14 @@
 p5.disableFriendlyErrors = true; // disables FES
 
 let JOINTS_COLORS = {
+    "creeper": "#00B400",
     "hip": "#FF7818",
     "knee": "#F4BE18",
-    "creeper": "#00B400"
+    "neck": "#0000FF",
+    "shoulder": "#6CC9FF",
+    "elbow": "#FF00AA",
+    "hand": "#FF8CFF",
+    "grip": "#FF0000",
 };
 
 function setup() {
@@ -43,29 +48,55 @@ function draw() {
         drawAgent(parkour, parkour.scale);
 
         if(window.draw_lidars){
-            //drawLidars(parkour.lidar, parkour.scale);
+            drawLidars(parkour.lidar, parkour.scale);
         }
 
         if(window.draw_joints){
+            // Creepers joints
             drawJoints(parkour.creepers_joints, parkour.scale);
-            drawJoints(parkour.agent_body.motors, parkour.scale);
+
+            // Agent motors
+            let joints = [...parkour.agent_body.motors];
+            if(parkour.agent_body.body_type == BodyTypesEnum.CLIMBER){
+                joints.push(parkour.agent_body.neck_joint);
+            }
+            drawJoints(joints, parkour.scale);
+
+            joints = [...parkour.agent_body.sensors.map(s => s.GetUserData().has_joint ? s.GetUserData().joint : null)];
+            drawJoints(joints, parkour.scale);
+        }
+
+        if(window.draw_sensors){
+            drawSensors(parkour.agent_body.sensors, parkour.scale);
         }
         pop();
     }
 
 }
 
+function drawSensors(sensors, scale){
+    for(let i = 0; i < sensors.length; i++){
+        let radius = sensors[i].GetFixtureList().GetShape().m_radius + 0.01;
+        let sensor_world_center = sensors[i].GetPosition()//sensors[i].GetWorldCenter();
+        noStroke();
+        fill(255, 0, 0, 255);
+        //fill("#FFFF00");
+        circle(sensor_world_center.x, VIEWPORT_H - sensor_world_center.y, radius);
+    }
+}
+
 function drawJoints(joints, scale){
     for(let i = 0; i < joints.length; i++){
-        let posA = joints[i].m_bodyA.GetWorldPoint(joints[i].m_localAnchorA);
-        let posB = joints[i].m_bodyB.GetWorldPoint(joints[i].m_localAnchorB);
-        noStroke();
-        let joint_type = joints[i].GetUserData().name;
-        fill(JOINTS_COLORS[joint_type]);
-        let radius = joint_type == "creeper" ? 5 : 7;
-        circle(posA.x, VIEWPORT_H - posA.y, radius/scale);
-        circle(posB.x, VIEWPORT_H - posB.y, radius/scale);
-
+        if(joints[i] != null){
+            let posA = joints[i].m_bodyA.GetWorldPoint(joints[i].m_localAnchorA);
+            let posB = joints[i].m_bodyB.GetWorldPoint(joints[i].m_localAnchorB);
+            noStroke();
+            let joint_type = joints[i].GetUserData().name;
+            fill(JOINTS_COLORS[joint_type]);
+            let radius = joint_type == "creeper" ? 5 : 7;
+            circle(posA.x, VIEWPORT_H - posA.y, radius/scale);
+            circle(posB.x, VIEWPORT_H - posB.y, radius/scale);
+        }
     }
 }
 

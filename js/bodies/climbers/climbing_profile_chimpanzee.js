@@ -16,11 +16,12 @@ class ClimbingProfileCHimpanzee extends ClimberAbstractBody {
         this.TORQUE_PENALTY = 0.00035 / 5; // Legs + arms + hands
         this.BODY_HEIGHT = 45;
         this.HEAD_HEIGHT = 20;
+        this.HEAD_UP = 2.5 / this.SCALE; // formerly 0.2
 
         this.AGENT_WIDTH = 24 / this.SCALE;
         this.AGENT_HEIGHT = this.BODY_HEIGHT / this.SCALE
             + this.HEAD_HEIGHT / this.SCALE
-            + 0.2 + this.LEG_H * 2
+            + this.HEAD_UP + this.LEG_H * 2
             - this.LEG_DOWN;
         this.AGENT_CENTER_HEIGHT = this.LEG_H * 2 + this.LEG_DOWN;
 
@@ -47,7 +48,7 @@ class ClimbingProfileCHimpanzee extends ClimberAbstractBody {
         let head_bd = new b2.BodyDef();
         head_bd.type = b2.Body.b2_dynamicBody;
         head_bd.position.Set(init_x,
-                             init_y + this.BODY_HEIGHT / this.SCALE / 2 + this.HEAD_HEIGHT / this.SCALE / 2 + 0.2);
+                             init_y + this.BODY_HEIGHT / this.SCALE / 2 + this.HEAD_HEIGHT / this.SCALE / 2 + this.HEAD_UP);
         let head = world.CreateBody(head_bd);
         head.CreateFixture(head_fd);
         head.color1 = "#806682"; // [0.5, 0.4, 0.9]
@@ -89,6 +90,8 @@ class ClimbingProfileCHimpanzee extends ClimberAbstractBody {
         rjd.lowerAngle = -0.1 * Math.PI;
         rjd.lowerAngle = 0.1 * Math.PI;
         let joint_motor = world.CreateJoint(rjd);
+        joint_motor.SetUserData(new CustomMotorUserData("neck", 0, false));
+        this.neck_joint = joint_motor;
 
         // Limbs FixtureDef
         let UPPER_LIMB_FD = new b2.FixtureDef();
@@ -247,7 +250,7 @@ class ClimbingProfileCHimpanzee extends ClimberAbstractBody {
                 rjd.maxMotorTorque = this.MOTORS_TORQUE;
                 rjd.motorSpeed = 1;
                 rjd.lowerAngle = angle_boundaries[u][0] * Math.PI;
-                rjd.lowerAngle = angle_boundaries[u][1] * Math.PI;
+                rjd.upperAngle = angle_boundaries[u][1] * Math.PI;
                 joint_motor = world.CreateJoint(rjd);
                 joint_motor.SetUserData(new CustomMotorUserData("hand",
                                                                 SPEED_HAND,

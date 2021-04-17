@@ -63,6 +63,7 @@
         <div class="buttonscontainer ib">
             <button id="jointsButton"> Draw joints </button>
             <button id="lidarsButton"> Draw lidars </button>
+            <button id="sensorsButton"> Draw sensors </button>
         </div>
         <form class="ib" onsubmit="return false">
             <label for="models">Choose a model to load:</label>
@@ -243,6 +244,13 @@
     window.draw_lidars = true;
     lidarsButton.onclick = function (){
         window.draw_lidars = !window.draw_lidars;
+        window.game.env.render();
+    }
+
+    let sensorsButton = document.getElementById("sensorsButton");
+    window.draw_sensors = true;
+    sensorsButton.onclick = function (){
+        window.draw_sensors = !window.draw_sensors;
         window.game.env.render();
     }
 

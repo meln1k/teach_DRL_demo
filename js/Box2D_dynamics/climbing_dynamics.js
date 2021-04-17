@@ -1,10 +1,10 @@
 class ClimbingDynamics {
     constructor(){};
 
-    before_step_climbing_dynamics(actions, body, world){
-        for(let i = 0; i < body.sensors.length; i++){
+    before_step_climbing_dynamics(actions, agent_body, world){
+        for(let i = 0; i < agent_body.sensors.length; i++){
             let action_to_check = actions[actions.length - i - 1];
-            let sensor_to_check = body.sensors[body.sensors.length - i - 1];
+            let sensor_to_check = agent_body.sensors[agent_body.sensors.length - i - 1];
             if(action_to_check > 0){ // Check whether the sensor should grasp or release
                 sensor_to_check.GetUserData().ready_to_attach = true;
             }
@@ -12,12 +12,15 @@ class ClimbingDynamics {
                 sensor_to_check.GetUserData().ready_to_attach = false;
                 if(sensor_to_check.GetUserData().has_joint){ // if release and it had a joint => destroy it
                     sensor_to_check.GetUserData().has_joint = false;
+
+                    // Get a list of all the joints of the sensor body
                     let sensor_joints = [];
-                    let joint = sensor_to_check.GetJointList();
-                    while(joint != null){
-                        sensor_joints.push(joint);
-                        joint = joint.m_next;
+                    let _joint = sensor_to_check.GetJointList();
+                    while(_joint != null){
+                        sensor_joints.push(_joint.joint);
+                        _joint = _joint.next;
                     }
+                    // Find the index of the first revolute joint
                     const isRevolute = (s) => s.m_type == b2.Joint.e_revoluteJoint;
                     let idx_to_destroy = sensor_joints.findIndex(isRevolute);
                     if(idx_to_destroy != -1){
@@ -34,36 +37,50 @@ class ClimbingDynamics {
             let sensor = contact_detector.contact_dictionaries.sensors[i];
             if(contact_detector.contact_dictionaries.bodies[i].length > 0
                 && sensor.GetUserData().ready_to_attach
-                && sensor.GetUserData().has_joint){
-                let other_body = contact_detector.contact_dictionaries.bodies[i][0];
+                && !sensor.GetUserData().has_joint){
+                let other_bodies = [...contact_detector.contact_dictionaries.bodies[i]];
+                for(let other_body of other_bodies){
 
-                // Check if still overlapping after solver
-                // Super coarse yet fast way, mainly useful for creepers
-                let other_body_shape = other_body.GetFixtureList().GetShape();
-                let x_values = [...other_body_shape.m_vertices.map(v => v.x)];
-                let y_values = [...other_body_shape.m_vertices.map(v => v.y)];
-                let radius = sensor.GetFixtureList().GetShape().m_radius + 0.01;
+                    // Check if still overlapping after solver
+                    // Super coarse yet fast way, mainly useful for creepers
+                    let other_body_shape = other_body.GetFixtureList().GetShape();
+                    let x_values = [];
+                    let y_values = [];
+                    if(other_body_shape.m_type == b2.Shape.e_polygon){
+                        x_values = [...other_body_shape.m_vertices.map(v => v.x)];
+                        y_values = [...other_body_shape.m_vertices.map(v => v.y)];
+                    }
+                    else if(other_body_shape.m_type == b2.Shape.e_edge){
+                        x_values = [other_body_shape.m_vertex1.x, other_body_shape.m_vertex2.x];
+                        y_values = [other_body_shape.m_vertex1.y, other_body_shape.m_vertex2.y];
+                    }
 
-                if(sensor.GetWorldCenter().x + radius > Math.min(...x_values)
-                    && sensor.GetWorldCenter().x - radius < Math.max(...x_values)
-                    && sensor.GetWorldCenter().y + radius > Math.min(...y_values)
-                    && sensor.GetWorldCenter().y - radius < Math.max(...y_values)){
-                    let rjd = new b2.RevoluteJointDef();
-                    rjd.Initialize(sensor, other_body, sensor.GetWorldCenter());
+                    let radius = sensor.GetFixtureList().GetShape().m_radius + 0.01;
+                    let sensor_world_center = sensor.GetWorldCenter();
 
-                    let joint = world.CreateJoint(rjd);
-                    joint.GetBodyA().GetUserData().joint = joint;
-                    sensor.GetUserData().has_joint = true;
-                }
-                else {
-                    // Remove other_body from the list of bodies in contact with the sensor
-                    let sensor_idx = contact_detector.contact_dictionaries.sensors.indexOf(sensor);
-                    if(sensor_idx != -1){
-                        let other_idx = contact_detector.contact_dictionaries.bodies[sensor_idx].indexOf(other_body);
-                        contact_detector.contact_dictionaries.bodies[sensor_idx].splice(other_idx, 1);
+                    if(sensor_world_center.x + radius > Math.min(...x_values)
+                        && sensor_world_center.x - radius < Math.max(...x_values)
+                        && sensor_world_center.y + radius > Math.min(...y_values)
+                        && sensor_world_center.y - radius < Math.max(...y_values)){
 
-                        if(contact_detector.contact_dictionaries.bodies[sensor_idx].length == 0){
-                            sensor.GetUserData().has_contact = false;
+                        let rjd = new b2.RevoluteJointDef();
+                        rjd.Initialize(sensor, other_body, sensor_world_center);
+                        let joint = world.CreateJoint(rjd);
+                        joint.SetUserData(new CustomBodyUserData(false, false, "grip"));
+                        joint.GetBodyA().GetUserData().joint = joint;
+                        sensor.GetUserData().has_joint = true;
+                        break;
+                    }
+                    else {
+                        // Remove other_body from the list of bodies in contact with the sensor
+                        let sensor_idx = contact_detector.contact_dictionaries.sensors.indexOf(sensor);
+                        if(sensor_idx != -1){
+                            let other_idx = contact_detector.contact_dictionaries.bodies[sensor_idx].indexOf(other_body);
+                            contact_detector.contact_dictionaries.bodies[sensor_idx].splice(other_idx, 1);
+
+                            if(contact_detector.contact_dictionaries.bodies[sensor_idx].length == 0){
+                                sensor.GetUserData().has_contact = false;
+                            }
                         }
                     }
                 }
