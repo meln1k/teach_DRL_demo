@@ -12,8 +12,12 @@ let JOINTS_COLORS = {
 };
 
 function setup() {
-    let myCanvas = createCanvas(RENDERING_VIEWER_W, RENDERING_VIEWER_H);
-    myCanvas.parent("canvas_container");
+    let canvas = createCanvas(RENDERING_VIEWER_W, RENDERING_VIEWER_H);
+    canvas.parent("canvas_container");
+    canvas.style('display', 'block');
+    canvas.style('margin-left', 'auto');
+    canvas.style('margin-right', 'auto');
+
     background("#e6e6ff");
     noLoop();
     //frameRate(30);
