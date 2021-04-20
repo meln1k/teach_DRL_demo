@@ -5,7 +5,8 @@ const SCALE  = 30 // affects how fast-paced the game is, forces should be adjust
 const VIEWPORT_W = 600
 const VIEWPORT_H = 400
 
-let RENDERING_VIEWER_W = 2 * VIEWPORT_W
+//let RENDERING_VIEWER_W = 2 * VIEWPORT_W
+let RENDERING_VIEWER_W = 0.8 * window.innerWidth;
 let RENDERING_VIEWER_H = VIEWPORT_H
 
 const NB_LIDAR = 10
@@ -29,22 +30,8 @@ class ParametricContinuousParkour {
 
     //constructor(water_level, config/*, agent_body_type*/, lidars_type="down"){
     constructor(agent_body_type, input_CPPN_dim=3, terrain_cppn_scale=10,
-                ceiling_offset=200, ceiling_clip_offset=0, lidars_type='down', water_clip=20,
+                ceiling_offset=200, ceiling_clip_offset=0, water_clip=20,
                 movable_creepers=false, walker_args){
-
-        // Use 'down' for walkers, 'up' for climbers and 'full' for swimmers.
-        if(lidars_type == "down") {
-            this.lidar_angle = 1.5;
-            this.lidar_y_offset = 0;
-        }
-        else if(lidars_type == "up") {
-            this.lidar_angle = 2.3;
-            this.lidar_y_offset = 1.5;
-        }
-        else if(lidars_type == "full") {
-            this.lidar_angle = Math.PI;
-            this.lidar_y_offset = 0;
-        }
 
         // Seed and init Box2D
         //this.seed();
@@ -60,12 +47,15 @@ class ParametricContinuousParkour {
         // TODO: body types enum + walker_args
         if(agent_body_type == "classic_bipedal"){
             this.agent_body = new ClassicBipedalBody(SCALE, /*walker_args*/);
+            this.set_lidars_type("down");
         }
         if(agent_body_type == "climbing_profile_chimpanzee"){
             this.agent_body = new ClimbingProfileCHimpanzee(SCALE)
+            this.set_lidars_type("up");
         }
         else {
             this.agent_body = new OldClassicBipedalBody(SCALE);
+            this.set_lidars_type("down");
         }
 
         // Terrain and dynamics
@@ -104,6 +94,22 @@ class ParametricContinuousParkour {
     // TODO
     seed(){
 
+    }
+
+    set_lidars_type(lidars_type){
+        // Use 'down' for walkers, 'up' for climbers and 'full' for swimmers.
+        if(lidars_type == "down") {
+            this.lidar_angle = 1.5;
+            this.lidar_y_offset = 0;
+        }
+        else if(lidars_type == "up") {
+            this.lidar_angle = 2.3;
+            this.lidar_y_offset = 1.5;
+        }
+        else if(lidars_type == "full") {
+            this.lidar_angle = Math.PI;
+            this.lidar_y_offset = 0;
+        }
     }
 
     set_terrain_cppn_scale(terrain_cppn_scale, ceiling_offset, ceiling_clip_offset){

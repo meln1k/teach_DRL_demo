@@ -47,8 +47,10 @@ class ClimbingDynamics {
                     let x_values = [];
                     let y_values = [];
                     if(other_body_shape.m_type == b2.Shape.e_polygon){
-                        x_values = [...other_body_shape.m_vertices.map(v => v.x)];
-                        y_values = [...other_body_shape.m_vertices.map(v => v.y)];
+                        for(let i = 0; i < other_body_shape.m_count; i++) {
+                            x_values.push(other_body.GetWorldPoint(other_body_shape.m_vertices[i]).x);
+                            y_values.push(other_body.GetWorldPoint(other_body_shape.m_vertices[i]).y);
+                        }
                     }
                     else if(other_body_shape.m_type == b2.Shape.e_edge){
                         x_values = [other_body_shape.m_vertex1.x, other_body_shape.m_vertex2.x];
