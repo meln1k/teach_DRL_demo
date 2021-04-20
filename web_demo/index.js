@@ -1,7 +1,15 @@
+
+const body_type_mapping = new Map();
+
+body_type_mapping.set("bipedal", "old_classic_bipedal");
+body_type_mapping.set("chimpanzee", "climbing_profile_chimpanzee");
+
 function init(agent_body_type, cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type) {
     let canvas_id = 'main_screen2';
 
-    window.game = new ParkourGame(config, canvas_id, agent_body_type, cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type);
+    const supported_body_type = body_type_mapping.get(agent_body_type);
+
+    window.game = new ParkourGame(config, canvas_id, supported_body_type, cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type);
     window.game.env.set_zoom(parseFloat(zoomSlider.value) * parseFloat(resizeCanvasSlider.value));
     window.game.env.set_scroll(hScrollSlider.value, vScrollSlider.value);
     window.game.env.render();
@@ -18,7 +26,7 @@ function init_default() {
         getCreepersType());
 }
 
-function createSelectOptGroup(group_name){
+function createSelectOptGroup(group_name) {
     //const x = document.getElementById("models");
     const group = document.createElement("optgroup");
     group.label = group_name;
@@ -27,10 +35,10 @@ function createSelectOptGroup(group_name){
     return group;
 }
 
-function createSelectOption(option_name, path=null){
+function createSelectOption(option_name, path = null) {
     const option = document.createElement("option");
     option.text = option_name;
-    if(path != null){
+    if (path != null) {
         option.value = path;
     }
     return option;
@@ -43,7 +51,7 @@ function addAgentModel(modelName) {
     x.add(option);
 }
 
-async function testAgentModelSelector(){
+async function testAgentModelSelector() {
     fetch('./policies.json')
         .then(resp => resp.text().then(body => {
             window.agent_policies = JSON.parse(body);
@@ -63,7 +71,7 @@ async function testAgentModelSelector(){
                     //let morph_group = createSelectOptGroup(morphology["morphology"]);
                     select_morphology.appendChild(createSelectOption(morphology["morphology"]));
 
-                    if(morphologyDropdown.value == morphology["morphology"]){
+                    if (morphologyDropdown.value == morphology["morphology"]) {
                         morphology["seeds"].forEach(seed => {
                             //console.log(seed["seed"] + ":" + seed["path"]);
                             //morph_group.appendChild(createSelectOption(type["type"] + " > " + morphology["morphology"] + " > " + seed["seed"]));
@@ -80,17 +88,17 @@ async function testAgentModelSelector(){
 }
 
 let morphologyDropdown = document.getElementById("morphology");
-morphologyDropdown.oninput = function (){
+morphologyDropdown.oninput = function () {
     init_default();
     let modelsDropdown = document.getElementById("models");
     let length = modelsDropdown.options.length;
-    for (let i = length-1; i >= 0; i--) {
+    for (let i = length - 1; i >= 0; i--) {
         modelsDropdown.options[i] = null;
     }
-    for(let type of window.agent_policies){
-        for(let morphology of type["morphologies"]){
-            if(morphology["morphology"] == this.value) {
-                for(let seed of morphology["seeds"]){
+    for (let type of window.agent_policies) {
+        for (let morphology of type["morphologies"]) {
+            if (morphology["morphology"] == this.value) {
+                for (let seed of morphology["seeds"]) {
                     modelsDropdown.appendChild(createSelectOption(morphology["morphology"] + "_" + seed["seed"], seed["path"]));
                 }
             }
@@ -137,7 +145,8 @@ runButton.onclick = function () {
 let resetButton = document.getElementById("resetButton");
 resetButton.onclick = function () {
     runButton.innerText = "Start";
-    window.game.reset(morphologyDropdown.value,
+    const supported_body_type = body_type_mapping.get(morphologyDropdown.value);
+    window.game.reset(supported_body_type,
         [dim1Slider.value, dim2Slider.value, dim3Slider.value],
         waterSlider.value,
         creepersWidthSlider.value,

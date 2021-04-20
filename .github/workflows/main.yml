@@ -1,8 +1,8 @@
 name: CI
 on:
   push:
-    branches:
-      - main
+    # branches:
+    #   - main
 jobs:
   deploy:
     runs-on: ubuntu-20.04
@@ -15,11 +15,11 @@ jobs:
           pip install tensorflowjs
 
       - name: Convert models to tfjs
-        run: ls models | xargs -I"{}" tensorflowjs_converter --input_format=tf_saved_model --output_node_names='parkour_walker' --saved_model_tags=serve --skip_op_check models/{}/tf1_save web_demo/models/{}
+        run: ls -d policy_models/*/*/*/ | xargs -I"{}" tensorflowjs_converter --input_format=tf_saved_model --output_node_names='parkour_walker' --saved_model_tags=serve --skip_op_check {}tf1_save web_demo/{}
 
       - name: Generate the list of models
         run:
-          echo $(ls models) | tr ' ' , > web_demo/models.csv
+          python3 policies_to_json.py
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
