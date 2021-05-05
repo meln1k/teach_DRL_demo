@@ -5,6 +5,7 @@ class AbstractBody {
         this.MOTORS_TORQUE = motors_torque;
         this.body_parts = [];
         this.motors = [];
+        this.is_selected = false;
     }
 
     get_state_size(){
@@ -62,9 +63,68 @@ class AbstractBody {
         return positions;
     }
 
+    // Check if the mouse position in the environment scale is inside the agent's morphology
+    isMousePosInside(mousePos){
+        for(let body of this.body_parts){
+            let shape = body.GetFixtureList().GetShape();
+            let vertices = [];
+            for(let i = 0; i < shape.m_count; i++){
+                let world_pos = body.GetWorldPoint(shape.m_vertices[i]);
+                vertices.push({x: world_pos.x, y: world_pos.y});
+            }
+
+            // Count the number of intersections between the edges of the polygon and the line of equation y = mousePos.y which are to the right of mousePos.x
+            let nb_intersections = 0;
+            for(let i = 0; i < vertices.length; i++){
+                let v1 = vertices[i];
+                let v2;
+                if(i == vertices.length - 1){
+                    v2 = vertices[0];
+                }
+                else {
+                    v2 = vertices[i+1];
+                }
+
+                // check if the edge between v1 and v2 cross the mouse y-coordinate
+                if(mousePos.y >= Math.min(v1.y, v2.y) && mousePos.y <= Math.max(v1.y, v2.y)){
+                    let intersection_x;
+
+                    // compute the equation of the line between v1 and v2
+                    let a = (v2.y - v1.y) / (v2.x - v1.x);
+                    let b = v1.y - a * v1.x;
+
+                    // compute the x-coordinate of the intersection point
+                    if(Math.abs(a) == Infinity){
+                        intersection_x = v1.x;
+                    }
+                    else{
+                        intersection_x = (mousePos.y - b) / a;
+                    }
+
+                    // increase the number of intersection only if the intersection point is to the rigth of the mouse x-coordinate
+                    if(intersection_x >= mousePos.x) {
+                        nb_intersections += 1;
+                    }
+                }
+            }
+
+            // the mousePos is inside the agent's body if there is an odd number of intersections, else it is outside
+            if(nb_intersections % 2 != 0){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    set_awake(bool){
+        for(let body of this.body_parts){
+            body.SetAwake(bool);
+        }
+    }
+
     destroy(world){
         for(let body of this.body_parts){
-            world.Destroy(body);
+            world.DestroyBody(body);
         }
         this.body_parts = [];
         this.motors = [];

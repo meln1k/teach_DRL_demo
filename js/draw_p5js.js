@@ -12,7 +12,7 @@ let JOINTS_COLORS = {
 };
 
 function setup() {
-    let canvas = createCanvas(RENDERING_VIEWER_W, RENDERING_VIEWER_H);
+    window.canvas = createCanvas(RENDERING_VIEWER_W, RENDERING_VIEWER_H);
     canvas.parent("canvas_container");
     canvas.style('display', 'block');
     canvas.style('margin-left', 'auto');
@@ -41,41 +41,110 @@ function hexToRgb(hex) {
     return result ? rgb : null;
 }
 
+function color_agent_head(agent, c1, c2){
+    /*
+     * Color agent's head depending on its 'dying' state.
+     */
+    let ratio = 0;
+    if(agent.agent_body.nb_steps_can_survive_under_water){
+        ratio = agent.nb_steps_under_water / agent.agent_body.nb_steps_can_survive_under_water;
+    }
+
+    let color1 = [
+        c1[0] + ratio * (1.0 - c1[0]),
+        c1[1] + ratio * (0.0 - c1[1]),
+        c1[2] + ratio * (0.0 - c1[2])
+    ]
+    let color2 = c2;
+    return [color1, color2];
+}
+
 function draw() {
     //background("#e6e6ff");
     background("#E6F0FF");
     if(window.game != null){
         let parkour = window.game.env;
-
         push();
+
         drawParkour(parkour);
-        drawAgent(parkour, parkour.scale);
 
-        if(window.draw_lidars){
-            drawLidars(parkour.lidar, parkour.scale);
-        }
+        // MULTI AGENT
+        if(window.multi_agents){
+            for(let agent of parkour.agents){
+                drawAgent(parkour, agent, parkour.scale);
 
-        if(window.draw_joints){
-            // Creepers joints
-            drawJoints(parkour.creepers_joints, parkour.scale);
+                if(window.draw_lidars){
+                    drawLidars(agent.lidars, parkour.scale);
+                }
 
-            // Agent motors
-            let joints = [...parkour.agent_body.motors];
-            if(parkour.agent_body.body_type == BodyTypesEnum.CLIMBER){
-                joints.push(parkour.agent_body.neck_joint);
+                if(window.draw_joints){
+
+                    // Agent motors
+                    let joints = [...agent.agent_body.motors];
+                    if(agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
+                        joints.push(agent.agent_body.neck_joint);
+                    }
+                    drawJoints(joints, parkour.scale);
+
+                    if(agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
+                        joints = [...agent.agent_body.sensors.map(s => s.GetUserData().has_joint ? s.GetUserData().joint : null)];
+                        drawJoints(joints, parkour.scale);
+                    }
+                }
+
+                if(window.draw_sensors){
+                    drawSensors(agent.agent_body.sensors, parkour.scale);
+                }
+
+                if(window.draw_names){
+                    let pos = agent.agent_body.reference_head_object.GetPosition();
+                    fill(0);
+                    noStroke()
+                    textSize(20/parkour.scale);
+                    //textAlign(CENTER);
+                    text(agent.policy.name, pos.x - agent.agent_body.AGENT_WIDTH/2, RENDERING_VIEWER_H - (pos.y + agent.agent_body.AGENT_HEIGHT/3));
+                }
             }
-            drawJoints(joints, parkour.scale);
 
-            joints = [...parkour.agent_body.sensors.map(s => s.GetUserData().has_joint ? s.GetUserData().joint : null)];
-            drawJoints(joints, parkour.scale);
+            if(window.draw_joints) {
+                // Creepers joints
+                drawJoints(parkour.creepers_joints, parkour.scale);
+            }
         }
 
-        if(window.draw_sensors){
-            drawSensors(parkour.agent_body.sensors, parkour.scale);
+
+        // ONE AGENT
+        else{
+            drawAgent(parkour, parkour.agent_body, parkour.scale);
+
+            if(window.draw_lidars){
+                drawLidars(parkour.lidar, parkour.scale);
+            }
+
+            if(window.draw_joints){
+                // Creepers joints
+                drawJoints(parkour.creepers_joints, parkour.scale);
+
+                // Agent motors
+                let joints = [...parkour.agent_body.motors];
+                if(parkour.agent_body.body_type == BodyTypesEnum.CLIMBER){
+                    joints.push(parkour.agent_body.neck_joint);
+                }
+                drawJoints(joints, parkour.scale);
+
+                if(parkour.agent_body.body_type == BodyTypesEnum.CLIMBER){
+                    joints = [...parkour.agent_body.sensors.map(s => s.GetUserData().has_joint ? s.GetUserData().joint : null)];
+                    drawJoints(joints, parkour.scale);
+                }
+            }
+
+            if(window.draw_sensors){
+                drawSensors(parkour.agent_body.sensors, parkour.scale);
+            }
         }
+
         pop();
     }
-
 }
 
 function drawSensors(sensors, scale){
@@ -104,26 +173,63 @@ function drawJoints(joints, scale){
     }
 }
 
-function drawAgent(parkour, scale){
-    let polys = parkour.agent_body.get_elements_to_render();
-    for(let poly of polys){
-        let shape = poly.GetFixtureList().GetShape();
-        let vertices = [];
-        for(let i = 0; i < shape.m_count; i++){
-            let world_pos = poly.GetWorldPoint(shape.m_vertices[i]);
-            vertices.push([world_pos.x, world_pos.y]);
-        }
-        strokeWeight(2/scale);
-        stroke(poly.color2);
-        let color1 = poly.color1;
-        if(poly == parkour.agent_body.reference_head_object){
-            let rgb01 = hexToRgb(poly.color1).map(c => c / 255);
-            let rgb255 = parkour.color_agent_head(rgb01, poly.color2)[0].map(c => Math.round(c * 255));
-            color1 = rgbToHex(rgb255);
-        }
-        drawPolygon(vertices, color1);
+function drawAgent(parkour, agent, scale){
+    let stroke_coef = 1;
 
+    if(window.multi_agents){
+        if(agent.is_selected){
+            stroke_coef = 2;
+        }
+
+        let polys = agent.agent_body.get_elements_to_render();
+        for(let poly of polys){
+            let shape = poly.GetFixtureList().GetShape();
+
+            let vertices = [];
+            for(let i = 0; i < shape.m_count; i++){
+                let world_pos = poly.GetWorldPoint(shape.m_vertices[i]);
+                vertices.push([world_pos.x, world_pos.y]);
+            }
+
+            strokeWeight(stroke_coef * 2/scale);
+            stroke(poly.color2);
+            let color1 = poly.color1;
+            if(poly == agent.agent_body.reference_head_object){
+                let rgb01 = hexToRgb(poly.color1).map(c => c / 255);
+                let rgb255 = color_agent_head(agent, rgb01, poly.color2)[0].map(c => Math.round(c * 255));
+                color1 = rgbToHex(rgb255);
+            }
+            drawPolygon(vertices, color1);
+        }
     }
+    else{
+        if(agent.is_selected){
+            stroke_coef = 2;
+        }
+
+        let polys = agent.get_elements_to_render();
+        for(let poly of polys){
+            let shape = poly.GetFixtureList().GetShape();
+
+            let vertices = [];
+            for(let i = 0; i < shape.m_count; i++){
+                let world_pos = poly.GetWorldPoint(shape.m_vertices[i]);
+                vertices.push([world_pos.x, world_pos.y]);
+            }
+
+            strokeWeight(stroke_coef * 2/scale);
+            stroke(poly.color2);
+            let color1 = poly.color1;
+            if(poly == agent.reference_head_object){
+                let rgb01 = hexToRgb(poly.color1).map(c => c / 255);
+                let rgb255 = parkour.color_agent_head(rgb01, poly.color2)[0].map(c => Math.round(c * 255));
+                color1 = rgbToHex(rgb255);
+            }
+            drawPolygon(vertices, color1);
+        }
+    }
+
+
 }
 
 function drawLidars(lidars, scale){
@@ -172,6 +278,14 @@ function drawSkyClouds(parkour){
 }
 
 function drawParkour(parkour){
+    // Update scroll to stay centered on the agent position
+    if(window.follow_agent){
+        if(parkour.agents.length > 0 && window.agent_selected == null){
+            window.agent_selected = parkour.agents[0];
+        }
+        parkour.set_scroll(window.agent_selected, hScrollSlider.value, vScrollSlider.value);
+    }
+
     // Sky & clouds
     drawSkyClouds(parkour);
 
