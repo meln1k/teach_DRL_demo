@@ -126,25 +126,25 @@ window.addEventListener("load", loadModel, false);
 
 /* BUTTONS AND SLIDERS */
 
-let runButton = document.getElementById("runButton");
-runButton.onclick = function () {
+let runButtons = Array.from(document.getElementsByClassName("runButton"));
+runButtons.forEach(b => b.onclick = function () {
     //const policy = document.getElementById("models").value;
     const policy = modelsDropdown.value;
     window.game.run(policy).then(text => {
         if(text == "Pause"){
-            this.className = "btn btn-warning";
+            this.className = "btn btn-warning runButton";
         }
         else if(text == "Resume"){
-            this.className = "btn btn-success";
+            this.className = "btn btn-success runButton";
         }
-        this.innerText = text
+        this.innerText = text;
     });
-}
+});
 
-let resetButton = document.getElementById("resetButton");
-resetButton.onclick = function () {
-    runButton.className = "btn btn-success";
-    runButton.innerText = "Start";
+let resetButton = Array.from(document.getElementsByClassName("resetButton"));
+resetButton.forEach(b => b.onclick = function () {
+    runButtons.forEach(b => b.className = "btn btn-success runButton");
+    runButtons.forEach(b => b.innerText = "Start");
     let morphologies = [...window.game.env.agents.map(agent => agent.morphology)];
     let policies = [...window.game.env.agents.map(agent => agent.policy)];
     let positions = [...window.game.env.agents.map(agent => null)];
@@ -165,6 +165,49 @@ resetButton.onclick = function () {
     window.game.env.set_zoom(parseFloat(zoomSlider.value)/* * parseFloat(resizeCanvasSlider.value)*/);
     window.game.env.set_scroll(window.agent_selected, hScrollSlider.value, vScrollSlider.value);
     window.game.env.render();
+});
+
+let simpleTrackBtn = document.getElementById("simpleTrackBtn");
+simpleTrackBtn.onclick = function() {
+    dim1Slider.value = '1';
+    dim2Slider.value = '1';
+    dim3Slider.value = '0';
+    addAgentSimpleView();
+}
+
+let complexTrackBtn = document.getElementById("complexTrackBtn");
+complexTrackBtn.onclick = function() {
+    dim1Slider.value = '0.3';
+    dim2Slider.value = '0.1';
+    dim3Slider.value = '-0.9';
+    addAgentSimpleView();
+}
+
+let simpleAgentAdded = false;
+
+const addAgentSimpleView = () => {
+    if (!simpleAgentAdded) {
+        window.game.env.add_agent(body_type_mapping.get("bipedal"), {name: "bipedal_1", path: "policy_models/walker/bipedal/16-02_old_walker_parkour_student_sac_v0.1.1_teacher_ALP-GMM_s1"});
+        simpleAgentAdded = true;
+    }
+    const morphologies = [...window.game.env.agents.map(agent => agent.morphology)];
+    const policies = [...window.game.env.agents.map(agent => agent.policy)];
+    const positions = [...window.game.env.agents.map(agent => agent.agent_body.reference_head_object.GetPosition())];
+    window.follow_agent = true;
+
+    window.game.reset(
+        morphologies,
+        policies,
+        positions,
+        [parseFloat(dim1Slider.value), parseFloat(dim2Slider.value), parseFloat(dim3Slider.value)],
+        parseFloat(waterSlider.value),
+        parseFloat(creepersWidthSlider.value),
+        parseFloat(creepersHeightSlider.value),
+        parseFloat(creepersSpacingSlider.value),
+        parseFloat(smoothingSlider.value),
+        getCreepersType());
+    window.game.env.render();
+    nbAgents.innerText = window.game.env.agents.length + " agents";
 }
 
 let jointsButton = document.getElementById("jointsButton");
@@ -373,7 +416,7 @@ function initializeSlider(id, step, value) {
     sliderValue.innerHTML = slider.value; // Display the default slider value
     slider.oninput = function () {
         sliderValue.innerHTML = this.value;
-        runButton.innerText = "Start";
+        runButtons.forEach(b => b.innerText = "Start");
 
         let morphologies = [...window.game.env.agents.map(agent => agent.morphology)];
         let policies = [...window.game.env.agents.map(agent => agent.policy)];
