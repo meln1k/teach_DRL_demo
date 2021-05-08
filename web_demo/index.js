@@ -141,13 +141,18 @@ runButton.onclick = function () {
     });
 }
 
-let resetButton = document.getElementById("resetButton");
-resetButton.onclick = function () {
+function reset(keep_positions){
     runButton.className = "btn btn-success";
     runButton.innerText = "Start";
     let morphologies = [...window.game.env.agents.map(agent => agent.morphology)];
     let policies = [...window.game.env.agents.map(agent => agent.policy)];
-    let positions = [...window.game.env.agents.map(agent => null)];
+    let positions;
+    if(keep_positions){
+        positions = [...window.game.env.agents.map(agent => agent.agent_body.reference_head_object.GetPosition())];
+    }
+    else{
+        positions = [...window.game.env.agents.map(agent => null)];
+    }
 
     window.game.reset(
         morphologies,
@@ -163,8 +168,13 @@ resetButton.onclick = function () {
     nbAgents.innerText = window.game.env.agents.length + " agents";
     window.agent_selected = null;
     window.game.env.set_zoom(parseFloat(zoomSlider.value)/* * parseFloat(resizeCanvasSlider.value)*/);
-    window.game.env.set_scroll(window.agent_selected, hScrollSlider.value, vScrollSlider.value);
+    window.game.env.set_scroll(window.agent_selected, parseFloat(hScrollSlider.value), parseFloat(vScrollSlider.value));
     window.game.env.render();
+}
+
+let resetButton = document.getElementById("resetButton");
+resetButton.onclick = function () {
+    reset(false);
 }
 
 let jointsButton = document.getElementById("jointsButton");
@@ -361,7 +371,7 @@ function getCreepersType() {
 // Creeper Type form
 let creepersTypeSelect = document.getElementById("creepersType");
 creepersType.onclick = function () {
-    init_default();
+    reset(true);
 }
 
 // Initialize all sliders for parkour generation
@@ -373,37 +383,14 @@ function initializeSlider(id, step, value) {
     sliderValue.innerHTML = slider.value; // Display the default slider value
     slider.oninput = function () {
         sliderValue.innerHTML = this.value;
-        runButton.innerText = "Start";
-
-        let morphologies = [...window.game.env.agents.map(agent => agent.morphology)];
-        let policies = [...window.game.env.agents.map(agent => agent.policy)];
-        let positions = [...window.game.env.agents.map(agent => agent.agent_body.reference_head_object.GetPosition())];
-
-        window.game.reset(
-            morphologies,
-            policies,
-            positions,
-            [parseFloat(dim1Slider.value), parseFloat(dim2Slider.value), parseFloat(dim3Slider.value)],
-            parseFloat(waterSlider.value),
-            parseFloat(creepersWidthSlider.value),
-            parseFloat(creepersHeightSlider.value),
-            parseFloat(creepersSpacingSlider.value),
-            parseFloat(smoothingSlider.value),
-            getCreepersType());
-        nbAgents.innerText = window.game.env.agents.length + " agents";
-        window.agent_selected = null;
-        window.game.env.set_zoom(parseFloat(zoomSlider.value));
-        window.game.env.set_scroll(window.agent_selected,  parseFloat(hScrollSlider.value),  parseFloat(vScrollSlider.value));
-        window.game.env.render();
-
-        //init_default();
+        reset(true);
     }
 }
 
 // Get the position of the mouse cursor in the environment scale
 function getMousePosToEnvScale(){
     //let x = Math.max(0, Math.min(mouseX, window.canvas.width));
-    let x = Math.max(-window.canvas.width * 1/10, Math.min(mouseX, window.canvas.width * 11/10));
+    let x = Math.max(-window.canvas.width * 0.01, Math.min(mouseX, window.canvas.width * 1.01));
     let y = Math.max(0, Math.min(mouseY, window.canvas.height));
 
     x +=  window.game.env.scroll[0];
