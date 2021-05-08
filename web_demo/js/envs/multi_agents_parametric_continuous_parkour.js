@@ -849,12 +849,6 @@ class MAParametricContinuousParkour {
     }
 
     add_agent(morphology, policy){
-        window.game.pause();
-        window.runButton.className = "btn btn-success";
-        if(window.runButton.innerText == "Pause"){
-            window.runButton.innerText = "Resume";
-        }
-
         this.create_agent(morphology, policy, null);
         this._generate_agent(this.agents[this.agents.length - 1]);
         this.init_agent(this.agents[this.agents.length - 1]);

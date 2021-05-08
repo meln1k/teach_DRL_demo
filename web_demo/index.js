@@ -59,24 +59,7 @@ window.addEventListener("load", loadModel, false);
 
 /* BUTTONS AND SLIDERS */
 
-let runButton = document.getElementById("runButton");
-runButton.onclick = function () {
-    //const policy = document.getElementById("models").value;
-    const policy = modelsDropdown.value;
-    window.game.run(policy).then(text => {
-        if(text == "Pause"){
-            this.className = "btn btn-warning";
-        }
-        else if(text == "Resume"){
-            this.className = "btn btn-success";
-        }
-        this.innerText = text
-    });
-}
-
 function reset(keep_positions){
-    runButton.className = "btn btn-success";
-    runButton.innerText = "Start";
     let morphologies = [...window.game.env.agents.map(agent => agent.morphology)];
     let policies = [...window.game.env.agents.map(agent => agent.policy)];
     let positions;
@@ -105,10 +88,6 @@ function reset(keep_positions){
     window.game.env.render();
 }
 
-let resetButton = document.getElementById("resetButton");
-resetButton.onclick = function () {
-    reset(false);
-}
 
 let jointsButton = document.getElementById("jointsButton");
 window.draw_joints = false;

@@ -57,13 +57,7 @@ class ParkourGame {
     }
 
     async run(policy){
-        if(this.running){
-            return this.pause();
-        }
-        else {
-
-            //console.log("loading policy", policy)
-
+ 
             if(multi_agents){
                 for(let agent of window.game.env.agents){
                     agent.model = await tf.loadGraphModel(agent.policy.path + '/model.json');
@@ -77,7 +71,7 @@ class ParkourGame {
             }, 1000 / this.draw_fps);
             this.running = true;
             return "Pause"
-        }
+        
     }
 
     reset(morphologies, policies, positions, cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type){

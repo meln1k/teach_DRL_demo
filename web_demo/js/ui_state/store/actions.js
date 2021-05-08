@@ -4,8 +4,24 @@ bodyTypeMapping.set("chimpanzee", "climbing_profile_chimpanzee");
 
 
 export default {
+    toggleRun(context, payload) {
+        const status = context.state.simulationState.status;
+        if (status == 'init') {
+            context.commit('startSimulation', {})
+        }
+        if (status == 'running') {
+            context.commit('pauseSimulation', {});
+        }
+        if (status == 'paused') {
+            context.commit('startSimulation', {});
+        }
+    },
+    resetSimulation(context, payload) {
+        context.commit('resetSimulation', payload);
+    },
     addAgent(context, payload) {
-        console.log(context.state.morphologies)
+        context.commit('pauseSimulation', {});
+
         const morphology = body_type_mapping.get(context.state.currentMorphology);
         const currentSeed = context.state.morphologies
             .filter(m => m.morphology == context.state.currentMorphology)
