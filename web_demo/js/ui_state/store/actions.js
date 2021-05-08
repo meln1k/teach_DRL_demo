@@ -1,17 +1,11 @@
 export default {
-    addModel(context, payload) {
-        context.commit('addModel', payload);
+    selectMorphology(context, payload) {
+        context.commit('selectMorphology', payload);
     },
-    clearModels(context, payload) {
-        context.commit('clearModels', {});
+    selectSeedIdx(context, payload) {
+        context.commit('selectSeedIdx', payload);
     },
     addMorphology(context, payload) {
         context.commit('addMorphology', payload);
-    },
-    addItem(context, payload) {
-        context.commit('addItem', payload);
-    },
-    clearItem(context, payload) {
-        context.commit('clearItem', payload);
     }
 };

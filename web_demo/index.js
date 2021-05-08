@@ -41,76 +41,9 @@ function createSelectOption(option_name, path = null) {
     return option;
 }
 
-function addAgentModel(modelName) {
-    const x = document.getElementById("models");
-    const option = document.createElement("option");
-    option.text = modelName;
-    x.add(option);
-}
-
-async function testAgentModelSelector() {
-    fetch('./policies.json')
-        .then(resp => resp.text().then(body => {
-            window.agent_policies = JSON.parse(body);
-            return window.agent_policies;
-        }))
-        .then(types => {
-            const select_models = document.getElementById("models");
-            const select_morphology = document.getElementById("morphology");
-
-            types.forEach(type => {
-                //console.log(type["type"]);
-                //let type_group = createSelectOptGroup(type["type"]);
-                //select.add(type_group);
-
-                type["morphologies"].forEach(morphology => {
-                    //console.log(morphology["morphology"]);
-                    //let morph_group = createSelectOptGroup(morphology["morphology"]);
-                    select_morphology.appendChild(createSelectOption(morphology["morphology"]));
-
-                    if (morphologyDropdown.value == morphology["morphology"]) {
-                        morphology["seeds"].forEach(seed => {
-                            //console.log(seed["seed"] + ":" + seed["path"]);
-                            //morph_group.appendChild(createSelectOption(type["type"] + " > " + morphology["morphology"] + " > " + seed["seed"]));
-                            select_models.appendChild(createSelectOption(morphology["morphology"] + "_" + seed["seed"],
-                                seed["path"]));
-                        });
-                    }
-                    //type_group.appendChild(morph_group);
-                });
-                //select.appendChild(type_group);
-            });
-
-        });
-}
-
 let morphologyDropdown = document.getElementById("morphology");
 let modelsDropdown = document.getElementById("models");
-morphologyDropdown.oninput = function () {
-    let length = modelsDropdown.options.length;
-    for (let i = length - 1; i >= 0; i--) {
-        modelsDropdown.options[i] = null;
-    }
-    for (let type of window.agent_policies) {
-        for (let morphology of type["morphologies"]) {
-            if (morphology["morphology"] == this.value) {
-                for (let seed of morphology["seeds"]) {
-                    modelsDropdown.appendChild(createSelectOption(morphology["morphology"] + "_" + seed["seed"], seed["path"]));
-                }
-            }
-        }
-    }
-}
 
-async function renderAgentModelSelector() {
-    fetch(`./models.csv`)
-        .then(resp => resp.text().then(body => body.split(",")))
-        .then(models => {
-            models.forEach(model => {
-                addAgentModel(model);
-            });
-        })
-}
 
 async function loadModel() {
     window.multi_agents = true;

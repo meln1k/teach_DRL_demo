@@ -1,22 +1,15 @@
 export default {
-    addModel(state, payload) {
-        state.models.push(payload)
+    selectMorphology(state, payload) {
+        state.currentMorphology = payload;
+        state.currentSeedIdx = 0;
         return state;
     },
-    clearModels(state, payload) {
-        state.models = [];
+    selectSeedIdx(state, payload) {
+        state.currentSeedIdx = payload;
         return state;
     },
     addMorphology(state, payload) {
         state.morphologies.push(payload);
-        return state;
-    },
-    addItem(state, payload) {
-        state.items.push(payload);
-        return state;
-    },
-    clearItem(state, payload) {
-        state.items.splice(payload.index, 1);
         return state;
     }
 };

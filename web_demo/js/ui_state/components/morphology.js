@@ -8,6 +8,7 @@ export default class MorphologySelect extends Component {
         });
     }
     render() {
-        this.element.innerHTML = store.state.morphologies.map(m => `<option>${m.kind}</option>`).join('');
+        this.element.innerHTML = store.state.morphologies.map(m => `<option>${m.morphology}</option>`).join('');
+        this.element.value = store.state.currentMorphology;
     }
 };

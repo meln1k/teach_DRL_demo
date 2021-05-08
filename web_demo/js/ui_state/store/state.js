@@ -1,8 +1,5 @@
-export default {  
-    items: [
-        'An example task. Delete or add your ownq',
-        'Another example task. Delete or add your own'
-    ],
+export default {
     morphologies: [],
-    models: []
+    currentMorphology: "bipedal",
+    currentSeedIdx: "1"
 };
