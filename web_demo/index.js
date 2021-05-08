@@ -115,7 +115,7 @@ async function renderAgentModelSelector() {
 async function loadModel() {
     window.multi_agents = true;
     window.agent_selected = null;
-    await testAgentModelSelector();
+    // await testAgentModelSelector();
     //await renderAgentModelSelector();
     window.cppn_model = await tf.loadGraphModel('./js/CPPN/weights/same_ground_ceiling_cppn/tfjs_model/model.json');
     init_default();

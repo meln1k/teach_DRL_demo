@@ -60,6 +60,14 @@
 
 
         <div class="row justify-content-md-center g-2 mt-1">
+            <div class="agents-list" aria-live="polite" aria-label="A list of items you have to done"></div>
+            <div class="agents-list" aria-live="polite" aria-label="A list of items you have to done"></div>
+            <form class="agents-form">
+                <div>
+                    <input type="text" class="new-todo" id="new-item-field" autocomplete="off" placeholder="What is to be done"/>
+                    <button class="btn-primary save-button">Save</button>
+                </div>
+            </form>
             <div class="row justify-content-md-center g-2 mt-1">
                 <div class="col">
                     <label for="hScrollSlider" class="form-label">Horizontal scroll</label>
@@ -271,6 +279,7 @@
 
         </form>
     </div>
+    <script type="module" src="./ui.js"></script>
     <script src="./index.js"></script>
 </body>
 
