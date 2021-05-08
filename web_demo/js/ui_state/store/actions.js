@@ -20,7 +20,9 @@ export default {
         context.commit('resetSimulation', payload);
     },
     addAgent(context, payload) {
-        context.commit('pauseSimulation', {});
+        if (context.state.simulationState.status == 'running') {
+            context.commit('pauseSimulation', {});
+        }
 
         const morphology = body_type_mapping.get(context.state.currentMorphology);
         const currentSeed = context.state.morphologies
