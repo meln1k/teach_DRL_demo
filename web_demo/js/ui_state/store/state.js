@@ -1,5 +1,6 @@
 export default {
     morphologies: [],
     currentMorphology: "bipedal",
-    currentSeedIdx: "1"
+    currentSeedIdx: "1",
+    agents: []
 };

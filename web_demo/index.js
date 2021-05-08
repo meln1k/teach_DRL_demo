@@ -6,7 +6,7 @@ body_type_mapping.set("chimpanzee", "climbing_profile_chimpanzee");
 function init(cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type) {
 
     window.game = new ParkourGame([], [], [], cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type);
-    nbAgents.innerText = window.game.env.agents.length + " agents";
+    // nbAgents.innerText = window.game.env.agents.length + " agents";
     window.agent_selected = null;
     window.game.env.set_zoom(parseFloat(zoomSlider.value) /* * parseFloat(resizeCanvasSlider.value)*/);
     window.game.env.set_scroll(window.agent_selected, hScrollSlider.value, vScrollSlider.value);
@@ -98,7 +98,7 @@ function reset(keep_positions){
         parseFloat(creepersSpacingSlider.value),
         parseFloat(smoothingSlider.value),
         getCreepersType());
-    nbAgents.innerText = window.game.env.agents.length + " agents";
+    // nbAgents.innerText = window.game.env.agents.length + " agents";
     window.agent_selected = null;
     window.game.env.set_zoom(parseFloat(zoomSlider.value)/* * parseFloat(resizeCanvasSlider.value)*/);
     window.game.env.set_scroll(window.agent_selected, parseFloat(hScrollSlider.value), parseFloat(vScrollSlider.value));
@@ -174,21 +174,6 @@ followAgentButton.onclick = function () {
     //console.log(window.follow_agent);
     //console.log(window.agent_selected);
     //window.game.env.set_scroll(window.game.env.agents[0]);
-    window.game.env.render();
-}
-
-let addAgentButton = document.getElementById("addAgentButton");
-let nbAgents = document.getElementById("nbAgents");
-addAgentButton.onclick = function () {
-    window.game.env.add_agent(body_type_mapping.get(morphologyDropdown.value), {name: modelsDropdown.options[modelsDropdown.selectedIndex].text, path: modelsDropdown.value});
-    window.game.env.render();
-    nbAgents.innerText = window.game.env.agents.length + " agents";
-}
-
-let deleteAgentButton = document.getElementById("deleteAgentButton");
-deleteAgentButton.onclick = function () {
-    window.game.env.delete_agent();
-    nbAgents.innerText = window.game.env.agents.length + " agents";
     window.game.env.render();
 }
 
