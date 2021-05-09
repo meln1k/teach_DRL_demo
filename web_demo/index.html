@@ -155,13 +155,13 @@
             </div>
 
             <div class="row justify-content-md-center mt-3 mx-1">
-                <div class="col">
+                <div class="col" id="terrainShapeCol">
                     <div class="row">
                         <label for="hScrollSlider" class="form-label">Terrain shape</label>
                     </div>
                     <div class="row">
                         <div class="col-10">
-                            <input type="range" class="form-range" min="-1" max="1" id="dim1Slider">
+                            <input type="range" class="form-range" min="-1" max="1" step="0.01" id="dim1Slider">
                         </div>
                         <div class="col">
                             <span id="dim1Value"></span>
@@ -169,7 +169,7 @@
                     </div>
                     <div class="row">
                         <div class="col-10">
-                            <input type="range" class="form-range" min="-1" max="1" id="dim2Slider">
+                            <input type="range" class="form-range" min="-1" max="1" step="0.01" id="dim2Slider">
                         </div>
                         <div class="col">
                             <span id="dim2Value"></span>
@@ -177,14 +177,12 @@
                     </div>
                     <div class="row">
                         <div class="col-10">
-                            <input type="range" class="form-range" min="-1" max="1" id="dim3Slider">
+                            <input type="range" class="form-range" min="-1" max="1" step="0.01" id="dim3Slider">
                         </div>
                         <div class="col">
                             <span id="dim3Value"></span>
                         </div>
                     </div>
-
-
                 </div>
                 <div class="col">
                     <div class="row">
@@ -193,7 +191,7 @@
                         </div>
                         <div class="col-8">
                             <input type="range" class="form-range" min="10" max="40" value="20"
-                                   id="smoothingSlider">
+                            step="0.01" id="smoothingSlider">
                         </div>
                         <div class="col">
                             <span id="smoothingValue"></span>
@@ -204,7 +202,7 @@
                             <label for="hScrollSlider" class="form-label">Water level</label>
                         </div>
                         <div class="col-8">
-                            <input type="range" class="form-range" min="0" max="1" value="0" id="waterSlider">
+                            <input type="range" class="form-range" min="0" max="1" step="0.01" value="0" id="waterSlider">
                         </div>
                         <div class="col">
                             <span id="waterValue"></span>

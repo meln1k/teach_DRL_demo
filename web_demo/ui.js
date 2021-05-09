@@ -4,6 +4,7 @@ import ModelSelect from './js/ui_state/components/model_select.js';
 import AgentsList from './js/ui_state/components/agents_list.js';
 import RunButton from './js/ui_state/components/run_button.js';
 import DrawSwitches from './js/ui_state/components/draw.js';
+import TerrainConfig from './js/ui_state/components/terrain_config.js';
 
 // Morphology selector setup
 const morphologySelectElement = document.querySelector('#morphology');
@@ -44,28 +45,67 @@ resetButton.addEventListener('click', () => {
 });
 
 // Draw switches setup
-const followAgentsSwitch = document.querySelector("#followAgentsSwitch")
+const followAgentsSwitch = document.querySelector("#followAgentsSwitch");
 followAgentsSwitch.addEventListener('input', () => {
     store.dispatch('toggleSwitch', {name: 'followAgents', value: followAgentsSwitch.checked});
 });
-const drawJointsSwitch = document.querySelector("#drawJointsSwitch")
+const drawJointsSwitch = document.querySelector("#drawJointsSwitch");
 drawJointsSwitch.addEventListener('input', () => {
     store.dispatch('toggleSwitch', {name: 'drawJoints', value: drawJointsSwitch.checked} );
 });
-const drawLidarsSwitch = document.querySelector("#drawLidarsSwitch")
+const drawLidarsSwitch = document.querySelector("#drawLidarsSwitch");
 drawLidarsSwitch.addEventListener('input', () => {
     store.dispatch('toggleSwitch', {name: 'drawLidars', value: drawLidarsSwitch.checked});
 });
-const drawSensorsSwitch = document.querySelector("#drawSensorsSwitch")
+const drawSensorsSwitch = document.querySelector("#drawSensorsSwitch");
 drawSensorsSwitch.addEventListener('input', () => {
     store.dispatch('toggleSwitch',  {name: 'drawSensors', value: drawSensorsSwitch.checked});
 });
-const drawNamesSwitch = document.querySelector("#drawNamesSwitch")
+const drawNamesSwitch = document.querySelector("#drawNamesSwitch");
 drawNamesSwitch.addEventListener('input', () => {
     store.dispatch('toggleSwitch', {name: 'drawNames', value: drawNamesSwitch.checked});
 });
 const drawSwitchesInstance = new DrawSwitches();
 drawSwitchesInstance.render();
+
+// Terrain sliders setup
+const dim1SliderElement = document.querySelector("#dim1Slider")
+dim1SliderElement.addEventListener('input', () => {
+    store.dispatch('changeCppnCongfig', {
+        name: "dim1",
+        value: dim1SliderElement.value
+    });
+});
+const dim2SliderElement = document.querySelector("#dim2Slider")
+dim2SliderElement.addEventListener('input', () => {
+    store.dispatch('changeCppnCongfig', {
+        name: "dim2",
+        value: dim2SliderElement.value
+    });
+});
+const dim3SliderElement = document.querySelector("#dim3Slider")
+dim3SliderElement.addEventListener('input', () => {
+    store.dispatch('changeCppnCongfig', {
+        name: "dim3",
+        value: dim3SliderElement.value
+    });
+});
+const smoothingSliderElement = document.querySelector("#smoothingSlider")
+smoothingSliderElement.addEventListener('input', () => {
+    store.dispatch('changeCppnCongfig', {
+        name: "smoothingSlider",
+        value: smoothingSliderElement.value
+    });
+});
+const waterSliderElement = document.querySelector("#waterSlider")
+waterSliderElement.addEventListener('input', () => {
+    store.dispatch('changeCppnCongfig', {
+        name: "waterSlider",
+        value: waterSliderElement.value
+    });
+});
+const terrainConfigInstance = new TerrainConfig();
+terrainConfigInstance.render();
 
 // fetch morphologies
 fetch('./policies.json')

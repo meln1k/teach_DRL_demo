@@ -10,5 +10,12 @@ export default {
         drawLidars: true,
         drawSensors: false,
         drawNames: false
+    },
+    parkourConfig: {
+        dim1: 0,
+        dim2: 0,
+        dim3: 0,
+        smoothing: 20,
+        waterLevel: 0
     }
 };

@@ -143,18 +143,6 @@ resetZoom.onclick = function () {
 
 /* CPPN ENCODING */
 
-// dim1 slider
-initializeSlider("dim1", 0.01, 0);
-
-// dim2 slider
-initializeSlider("dim2", 0.01, 0);
-
-// dim3 slider
-initializeSlider("dim3", 0.01, 0);
-
-// water slider
-initializeSlider("water", 0.01, 0);
-
 // creepersWidth slider
 initializeSlider("creepersWidth", 0.01, 0.3);
 
@@ -163,9 +151,6 @@ initializeSlider("creepersHeight", 0.01, 3);
 
 // creepersSpacing slider
 initializeSlider("creepersSpacing", 0.01, 1);
-
-// smoothing slider
-initializeSlider("smoothing", 0.01, 20);
 
 
 function getCreepersType() {

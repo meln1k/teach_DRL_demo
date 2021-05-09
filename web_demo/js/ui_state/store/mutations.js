@@ -1,4 +1,24 @@
 export default {
+    updateCppnConfig(state, payload) {
+        switch (payload.name) {
+            case 'dim1':
+                state.parkourConfig.dim1 = payload.value;
+                break;
+            case 'dim2':
+                state.parkourConfig.dim2 = payload.value;
+                break;
+            case 'dim3':
+                state.parkourConfig.dim3 = payload.value;
+                break;
+            case 'smoothingSlider':
+                state.parkourConfig.smoothing = payload.value;
+                break;
+            case 'waterSlider':
+                state.parkourConfig.waterLevel = payload.value;
+                break;
+        }
+        return state;
+    },
     followAgents(state, payload) {
         state.simulationState.followAgents = payload;
         window.follow_agent = payload;
@@ -52,19 +72,26 @@ export default {
                 path: a.path
             };
         });
-        const positions = state.agents.map(a => null);
+        let positions;
+        if (payload.keepPositions) {
+            positions = [...window.game.env.agents.map(agent => agent.agent_body.reference_head_object.GetPosition())];
+        } else {
+            positions = state.agents.map(a => null);
+        }
+
+        const parkourConfig = state.parkourConfig
 
         window.game.reset(
             morphologies,
             policies,
             positions,
             // todo: do not use hard-coded vals here
-            [0.0,0.0,0.0],
-            parseFloat(0),
+            [parkourConfig.dim1,parkourConfig.dim2,parkourConfig.dim3],
+            parseFloat(parkourConfig.waterLevel),
             parseFloat(0.3),
             parseFloat(3.0),
             parseFloat(1.0),
-            parseFloat(20.0),
+            parseFloat(parkourConfig.smoothing),
             getCreepersType());
         window.agent_selected = null;
         window.game.env.set_zoom(1);

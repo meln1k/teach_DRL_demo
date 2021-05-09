@@ -4,6 +4,10 @@ bodyTypeMapping.set("chimpanzee", "climbing_profile_chimpanzee");
 
 
 export default {
+    changeCppnCongfig(context, payload) {
+        context.commit('updateCppnConfig', payload);
+        context.commit('resetSimulation', { keepPositions: true});
+    },
     toggleSwitch(context, payload) {
         switch (payload.name) {
             case 'followAgents':
@@ -44,7 +48,7 @@ export default {
         }
     },
     resetSimulation(context, payload) {
-        context.commit('resetSimulation', payload);
+        context.commit('resetSimulation', {keepPositions: false});
     },
     addAgent(context, payload) {
         if (context.state.simulationState.status == 'running') {
