@@ -25,14 +25,16 @@ export default {
     },
     toggleRun(context, payload) {
         const status = context.state.simulationState.status;
-        if (status == 'init') {
-            context.commit('startSimulation', {})
-        }
-        if (status == 'running') {
-            context.commit('pauseSimulation', {});
-        }
-        if (status == 'paused') {
-            context.commit('startSimulation', {});
+        switch (status) {
+            case 'init':
+                context.commit('startSimulation', {});
+                break;
+            case 'running':
+                context.commit('pauseSimulation', {});
+                break;
+            case 'paused':
+                context.commit('startSimulation', {});
+                break;
         }
     },
     resetSimulation(context, payload) {

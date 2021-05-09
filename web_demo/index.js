@@ -68,20 +68,6 @@ function reset(keep_positions){
     window.game.env.render();
 }
 
-
-let jointsButton = document.getElementById("jointsButton");
-window.draw_joints = false;
-jointsButton.onclick = function () {
-    window.draw_joints = !window.draw_joints;
-    if(window.draw_joints){
-        this.className = "btn btn-primary";
-    }
-    else{
-        this.className = "btn btn-outline-primary";
-    }
-    window.game.env.render();
-}
-
 let lidarsButton = document.getElementById("lidarsButton");
 window.draw_lidars = true;
 lidarsButton.onclick = function () {

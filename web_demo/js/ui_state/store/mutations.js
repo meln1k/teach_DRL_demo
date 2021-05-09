@@ -7,6 +7,8 @@ export default {
     },
     drawJoints(state, payload) {
         state.simulationState.drawJoints = payload;
+        window.draw_joints = payload;
+        window.game.env.render();
         return state;
     },
     drawLidars(state, payload) {
