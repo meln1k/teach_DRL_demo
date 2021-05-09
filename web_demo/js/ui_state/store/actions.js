@@ -4,6 +4,10 @@ bodyTypeMapping.set("chimpanzee", "climbing_profile_chimpanzee");
 
 
 export default {
+    changeCreepersConfig(context, payload) {
+        context.commit('updateCreepersConfig', payload);
+        context.commit('resetSimulation', { keepPositions: true});
+    },
     changeCppnCongfig(context, payload) {
         context.commit('updateCppnConfig', payload);
         context.commit('resetSimulation', { keepPositions: true});

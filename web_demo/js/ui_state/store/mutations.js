@@ -1,4 +1,22 @@
 export default {
+    updateCreepersConfig(state, payload) {
+        console.log(payload);
+        switch (payload.name) {
+            case 'width':
+                state.creepersConfig.width = payload.value;
+                break;
+            case 'height':
+                state.creepersConfig.height = payload.value;
+                break;
+            case 'spacing':
+                state.creepersConfig.spacing = payload.value;
+                break;
+            case 'type':
+                state.creepersConfig.type = payload.value;
+                break;
+        }
+        return state;
+    },
     updateCppnConfig(state, payload) {
         switch (payload.name) {
             case 'dim1':
@@ -79,20 +97,20 @@ export default {
             positions = state.agents.map(a => null);
         }
 
-        const parkourConfig = state.parkourConfig
+        const parkourConfig = state.parkourConfig;
+        const creepersConfig = state.creepersConfig;
 
         window.game.reset(
             morphologies,
             policies,
             positions,
-            // todo: do not use hard-coded vals here
             [parkourConfig.dim1,parkourConfig.dim2,parkourConfig.dim3],
-            parseFloat(parkourConfig.waterLevel),
-            parseFloat(0.3),
-            parseFloat(3.0),
-            parseFloat(1.0),
-            parseFloat(parkourConfig.smoothing),
-            getCreepersType());
+            parkourConfig.waterLevel,
+            creepersConfig.width,
+            creepersConfig.height,
+            creepersConfig.spacing,
+            parkourConfig.smoothing,
+            creepersConfig.type == "Swingable");
         window.agent_selected = null;
         window.game.env.set_zoom(1);
         window.game.env.set_scroll(window.agent_selected, 0.0, parseFloat(0));

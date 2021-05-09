@@ -17,5 +17,11 @@ export default {
         dim3: 0,
         smoothing: 20,
         waterLevel: 0
+    },
+    creepersConfig: {
+        width: 0.3,
+        height: 3,
+        spacing: 1,
+        type: 'Rigid'
     }
 };

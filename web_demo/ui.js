@@ -5,6 +5,7 @@ import AgentsList from './js/ui_state/components/agents_list.js';
 import RunButton from './js/ui_state/components/run_button.js';
 import DrawSwitches from './js/ui_state/components/draw.js';
 import TerrainConfig from './js/ui_state/components/terrain_config.js';
+import CreepersConfig from './js/ui_state/components/creepers_config.js';
 
 // Morphology selector setup
 const morphologySelectElement = document.querySelector('#morphology');
@@ -73,39 +74,76 @@ const dim1SliderElement = document.querySelector("#dim1Slider")
 dim1SliderElement.addEventListener('input', () => {
     store.dispatch('changeCppnCongfig', {
         name: "dim1",
-        value: dim1SliderElement.value
+        value: parseFloat(dim1SliderElement.value)
     });
 });
 const dim2SliderElement = document.querySelector("#dim2Slider")
 dim2SliderElement.addEventListener('input', () => {
     store.dispatch('changeCppnCongfig', {
         name: "dim2",
-        value: dim2SliderElement.value
+        value: parseFloat(dim2SliderElement.value)
     });
 });
 const dim3SliderElement = document.querySelector("#dim3Slider")
 dim3SliderElement.addEventListener('input', () => {
     store.dispatch('changeCppnCongfig', {
         name: "dim3",
-        value: dim3SliderElement.value
+        value: parseFloat(dim3SliderElement.value)
     });
 });
 const smoothingSliderElement = document.querySelector("#smoothingSlider")
 smoothingSliderElement.addEventListener('input', () => {
     store.dispatch('changeCppnCongfig', {
         name: "smoothingSlider",
-        value: smoothingSliderElement.value
+        value: parseFloat(smoothingSliderElement.value)
     });
 });
 const waterSliderElement = document.querySelector("#waterSlider")
 waterSliderElement.addEventListener('input', () => {
     store.dispatch('changeCppnCongfig', {
         name: "waterSlider",
-        value: waterSliderElement.value
+        value: parseFloat(waterSliderElement.value)
     });
 });
 const terrainConfigInstance = new TerrainConfig();
 terrainConfigInstance.render();
+
+// Creepers setup
+
+const creepersWidthSlider = document.querySelector("#creepersWidthSlider");
+creepersWidthSlider.addEventListener('input', () => {
+    store.dispatch('changeCreepersConfig', {
+        name: "width",
+        value: parseFloat(creepersWidthSlider.value)
+    });
+});
+
+const creepersHeightSlider = document.querySelector("#creepersHeightSlider");
+creepersHeightSlider.addEventListener('input', () => {
+    store.dispatch('changeCreepersConfig', {
+        name: "height",
+        value: parseFloat(creepersHeightSlider.value)
+    });
+});
+
+const creepersSpacingSlider = document.querySelector("#creepersSpacingSlider");
+creepersSpacingSlider.addEventListener('input', () => {
+    store.dispatch('changeCreepersConfig', {
+        name: "spacing",
+        value: parseFloat(creepersSpacingSlider.value)
+    });
+});
+
+const creepersTypeSelect = document.querySelector("#creepersType");
+creepersTypeSelect.addEventListener('input', () => {
+    store.dispatch('changeCreepersConfig', {
+        name: "type",
+        value: creepersTypeSelect.value
+    });
+});
+
+const creepersConfigInstance = new CreepersConfig();
+creepersConfigInstance.render()
 
 // fetch morphologies
 fetch('./policies.json')
@@ -127,8 +165,6 @@ fetch('./policies.json')
         });
 
     });
-
-console.log(store)
 
 // interaction with index.js
 window.cancelAgentFollow = () => {
