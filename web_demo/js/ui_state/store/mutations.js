@@ -1,4 +1,26 @@
 export default {
+    followAgents(state, payload) {
+        state.simulationState.followAgents = payload;
+        window.follow_agent = payload;
+        window.game.env.render();
+        return state;
+    },
+    drawJoints(state, payload) {
+        state.simulationState.drawJoints = payload;
+        return state;
+    },
+    drawLidars(state, payload) {
+        state.simulationState.drawLidars = payload;
+        return state;
+    },
+    drawSensors(state, payload) {
+        state.simulationState.drawSensors = payload;
+        return state;
+    },
+    drawNames(state, payload) {
+        state.simulationState.drawNames = payload;
+        return state;
+    },
     startSimulation(state, payload) {
         state.simulationState.status = 'running';
         const policy = state.morphologies

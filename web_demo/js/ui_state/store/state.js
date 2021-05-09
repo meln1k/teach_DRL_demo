@@ -5,7 +5,7 @@ export default {
     agents: [],
     simulationState: {
         status: 'init', // 'running', 'paused'
-        followAgent: true,
+        followAgents: false,
         drawJoints: false,
         drawLidars: true,
         drawSensors: false,

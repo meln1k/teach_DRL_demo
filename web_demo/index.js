@@ -23,26 +23,6 @@ function init_default() {
         getCreepersType());
 }
 
-function createSelectOptGroup(group_name) {
-    //const x = document.getElementById("models");
-    const group = document.createElement("optgroup");
-    group.label = group_name;
-    group.text = group_name;
-    //x.appendChild(group);
-    return group;
-}
-
-function createSelectOption(option_name, path = null) {
-    const option = document.createElement("option");
-    option.text = option_name;
-    if (path != null) {
-        option.value = path;
-    }
-    return option;
-}
-
-let morphologyDropdown = document.getElementById("morphology");
-let modelsDropdown = document.getElementById("models");
 
 
 async function loadModel() {
@@ -141,20 +121,7 @@ namesButton.onclick = function () {
     window.game.env.render();
 }
 
-let followAgentButton = document.getElementById("followAgentButton");
-followAgentButton.onclick = function () {
-    window.follow_agent = !window.follow_agent;
-    if(window.follow_agent){
-        this.className = "btn btn-primary";
-    }
-    else{
-        this.className = "btn btn-outline-primary";
-    }
-    //console.log(window.follow_agent);
-    //console.log(window.agent_selected);
-    //window.game.env.set_scroll(window.game.env.agents[0]);
-    window.game.env.render();
-}
+
 
 
 /*let resizeCanvasSlider = document.getElementById("resizeCanvasSlider");
@@ -176,8 +143,7 @@ hScrollSlider.step = 0.1;
 //hScrollValue.innerHTML = hScrollSlider.value; // Display the default slider value
 hScrollSlider.oninput = function () {
     //hScrollValue.innerHTML = this.value;
-    window.follow_agent = false;
-    followAgentButton.className = "btn btn-outline-primary";
+    window.cancelAgentFollow();
     window.game.env.set_scroll(window.agent_selected, this.value, vScrollSlider.value);
     window.game.env.render();
 }
@@ -185,8 +151,7 @@ let resetHScroll = document.getElementById("resetHScroll");
 resetHScroll.onclick = function () {
     hScrollSlider.value = 0;
     //hScrollValue.innerHTML = "0";
-    window.follow_agent = false;
-    followAgentButton.className = "btn btn-outline-primary";
+    window.cancelAgentFollow();
     window.game.env.set_scroll(window.agent_selected, 0, vScrollSlider.value);
     window.game.env.render();
 }
@@ -198,8 +163,7 @@ vScrollSlider.step = 0.1;
 //vScrollValue.innerHTML = vScrollSlider.value; // Display the default slider value
 vScrollSlider.oninput = function () {
     //vScrollValue.innerHTML = this.value;
-    window.follow_agent = false;
-    followAgentButton.className = "btn btn-outline-primary";
+    window.cancelAgentFollow();
     window.game.env.set_scroll(window.agent_selected, hScrollSlider.value, this.value);
     window.game.env.render();
 }
@@ -207,8 +171,7 @@ let resetVScroll = document.getElementById("resetVScroll");
 resetVScroll.onclick = function () {
     vScrollSlider.value = 0;
     // vScrollValue.innerHTML = "0";
-    window.follow_agent = false;
-    followAgentButton.className = "btn btn-outline-primary";
+    window.cancelAgentFollow();
     window.game.env.set_scroll(window.agent_selected, hScrollSlider.value, 0);
     window.game.env.render();
 }

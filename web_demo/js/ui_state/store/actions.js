@@ -4,6 +4,25 @@ bodyTypeMapping.set("chimpanzee", "climbing_profile_chimpanzee");
 
 
 export default {
+    toggleSwitch(context, payload) {
+        switch (payload.name) {
+            case 'followAgents':
+                context.commit('followAgents', payload.value);
+                break;
+            case 'drawJoints':
+                context.commit('drawJoints', payload.value);
+                break;
+            case 'drawLidars':
+                context.commit('drawLidars', payload.value);
+                break;
+            case 'drawSensors':
+                context.commit('drawSensors', payload.value);
+                break;
+            case 'drawNames':
+                context.commit('drawNames', payload.value);
+                break;
+        }
+    },
     toggleRun(context, payload) {
         const status = context.state.simulationState.status;
         if (status == 'init') {

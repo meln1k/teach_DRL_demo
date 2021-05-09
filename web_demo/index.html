@@ -103,8 +103,27 @@
             <div class="col col-md-auto">
                 <button id="resetButton" class="btn btn-danger"> Reset Simulation </button>
             </div>
-            <div class="col col-md-auto">
-                <button id="followAgentButton" class="btn btn-outline-primary"> Follow agent </button>
+            <div id="drawSelectors">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="followAgentsSwitch">
+                    <label class="form-check-label" for="followAgentsSwitch">Follow agents</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="drawJointsSwitch" >
+                    <label class="form-check-label" for="drawJointsSwitch">Draw joints</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="drawLidarsSwitch" >
+                    <label class="form-check-label" for="drawLidarsSwitch">Draw lidars</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="drawSensorsSwitch">
+                    <label class="form-check-label" for="drawSensorsSwitch">Draw sensors</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="drawNamesSwitch">
+                    <label class="form-check-label" for="drawNamesSwitch">Draw names</label>
+                </div>  
             </div>
             <div class="col col-md-auto">
                 <button id="jointsButton" class="btn btn-outline-primary"> Draw joints </button>
