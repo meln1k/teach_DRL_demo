@@ -849,12 +849,6 @@ class MAParametricContinuousParkour {
     }
 
     add_agent(morphology, policy){
-        window.game.pause();
-        window.runButton.className = "btn btn-success";
-        if(window.runButton.innerText == "Pause"){
-            window.runButton.innerText = "Resume";
-        }
-
         this.create_agent(morphology, policy, null);
         this._generate_agent(this.agents[this.agents.length - 1]);
         this.init_agent(this.agents[this.agents.length - 1]);
@@ -862,9 +856,9 @@ class MAParametricContinuousParkour {
         window.game.obs.push([...step_rets.map(e => e[0])]);
     }
 
-    delete_agent(){
+    delete_agent(agent_index){
         if(this.agents.length > 0){
-            let agent = window.agent_selected != null ? window.agent_selected : this.agents[this.agents.length  - 1];
+            let agent = this.agents[agent_index];
 
             let index = this.agents.indexOf(agent);
             if(index != -1){
