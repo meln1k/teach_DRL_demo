@@ -19,6 +19,8 @@ export default {
     },
     drawSensors(state, payload) {
         state.simulationState.drawSensors = payload;
+        window.draw_sensors = payload;
+        window.game.env.render();
         return state;
     },
     drawNames(state, payload) {

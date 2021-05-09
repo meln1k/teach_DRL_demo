@@ -68,20 +68,6 @@ function reset(keep_positions){
     window.game.env.render();
 }
 
-
-let sensorsButton = document.getElementById("sensorsButton");
-window.draw_sensors = false;
-sensorsButton.onclick = function () {
-    window.draw_sensors = !window.draw_sensors;
-    if(window.draw_sensors){
-        this.className = "btn btn-primary";
-    }
-    else{
-        this.className = "btn btn-outline-primary";
-    }
-    window.game.env.render();
-}
-
 let namesButton = document.getElementById("namesButton");
 window.draw_names = false;
 namesButton.onclick = function () {
