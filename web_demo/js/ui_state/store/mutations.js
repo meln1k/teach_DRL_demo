@@ -25,6 +25,8 @@ export default {
     },
     drawNames(state, payload) {
         state.simulationState.drawNames = payload;
+        window.draw_names = payload;
+        window.game.env.render();
         return state;
     },
     startSimulation(state, payload) {

@@ -68,22 +68,6 @@ function reset(keep_positions){
     window.game.env.render();
 }
 
-let namesButton = document.getElementById("namesButton");
-window.draw_names = false;
-namesButton.onclick = function () {
-    window.draw_names = !window.draw_names;
-    if(window.draw_names){
-        this.className = "btn btn-primary";
-    }
-    else{
-        this.className = "btn btn-outline-primary";
-    }
-    window.game.env.render();
-}
-
-
-
-
 /*let resizeCanvasSlider = document.getElementById("resizeCanvasSlider");
 resizeCanvasSlider.step = 0.01;
 resizeCanvasSlider.value = 0.8;
