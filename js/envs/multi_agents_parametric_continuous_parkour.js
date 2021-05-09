@@ -849,6 +849,12 @@ class MAParametricContinuousParkour {
     }
 
     add_agent(morphology, policy){
+        window.game.pause();
+        window.runButton.className = "btn btn-success";
+        if(window.runButton.innerText == "Pause"){
+            window.runButton.innerText = "Resume";
+        }
+
         this.create_agent(morphology, policy, null);
         this._generate_agent(this.agents[this.agents.length - 1]);
         this.init_agent(this.agents[this.agents.length - 1]);
@@ -857,11 +863,9 @@ class MAParametricContinuousParkour {
     }
 
     delete_agent(){
-        let agent = window.agent_selected;
-        if(this.agents.length == 1){
-            agent = this.agents[0];
-        }
-        if(agent != null){
+        if(this.agents.length > 0){
+            let agent = window.agent_selected != null ? window.agent_selected : this.agents[this.agents.length  - 1];
+
             let index = this.agents.indexOf(agent);
             if(index != -1){
                 this.agents.splice(index, 1);
@@ -873,9 +877,7 @@ class MAParametricContinuousParkour {
                 agent.id = this.agents.indexOf(agent);
             }
         }
-        else{
-            alert("Please select the agent you want to delete by clicking it.");
-        }
+
     }
 
     //endregion

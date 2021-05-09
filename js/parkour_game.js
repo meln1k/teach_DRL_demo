@@ -50,16 +50,19 @@ class ParkourGame {
         //this.nb_actions = this.env.agent_body.get_action_size();
     }
 
+    pause(){
+        clearInterval(this.runtime);
+        this.running = false;
+        return "Resume";
+    }
 
     async run(policy){
         if(this.running){
-            clearInterval(this.runtime);
-            this.running = false;
-            return "Resume";
+            return this.pause();
         }
         else {
 
-            console.log("loading policy", policy)
+            //console.log("loading policy", policy)
 
             if(multi_agents){
                 for(let agent of window.game.env.agents){
