@@ -13,6 +13,8 @@ export default {
     },
     drawLidars(state, payload) {
         state.simulationState.drawLidars = payload;
+        window.draw_lidars = payload;
+        window.game.env.render();
         return state;
     },
     drawSensors(state, payload) {

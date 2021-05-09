@@ -68,18 +68,6 @@ function reset(keep_positions){
     window.game.env.render();
 }
 
-let lidarsButton = document.getElementById("lidarsButton");
-window.draw_lidars = true;
-lidarsButton.onclick = function () {
-    window.draw_lidars = !window.draw_lidars;
-    if(window.draw_lidars){
-        this.className = "btn btn-primary";
-    }
-    else{
-        this.className = "btn btn-outline-primary";
-    }
-    window.game.env.render();
-}
 
 let sensorsButton = document.getElementById("sensorsButton");
 window.draw_sensors = false;

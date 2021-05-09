@@ -28,6 +28,12 @@ export default {
         switch (status) {
             case 'init':
                 context.commit('startSimulation', {});
+                // read the draw switches state;
+                context.commit('followAgents', context.state.simulationState.followAgents);
+                context.commit('drawJoints', context.state.simulationState.drawJoints);
+                context.commit('drawLidars', context.state.simulationState.drawLidars);
+                context.commit('drawSensors', context.state.simulationState.drawSensors);
+                context.commit('drawNames', context.state.simulationState.drawNames);
                 break;
             case 'running':
                 context.commit('pauseSimulation', {});
