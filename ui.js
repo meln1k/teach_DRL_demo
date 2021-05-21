@@ -2,10 +2,11 @@ import store from './js/ui_state/store/index.js';
 import MorphologySelect from './js/ui_state/components/morphology.js';
 import ModelSelect from './js/ui_state/components/model_select.js';
 import AgentsList from './js/ui_state/components/agents_list.js';
-import RunButton from './js/ui_state/components/run_button.js';
+import RunButtons from './js/ui_state/components/run_buttons.js';
 import DrawSwitches from './js/ui_state/components/draw.js';
 import TerrainConfig from './js/ui_state/components/terrain_config.js';
 import CreepersConfig from './js/ui_state/components/creepers_config.js';
+import DrawingMode from "./js/ui_state/components/drawing_mode.js";
 
 // Morphology selector setup
 const morphologySelectElement = document.querySelector('#morphology');
@@ -31,30 +32,25 @@ addAgentBtn.addEventListener('click', evt => {
 const agentListInstance = new AgentsList();
 agentListInstance.render();
 
-// Run button setup
+// Run/Reset buttons setup
 const runButton = document.querySelector("#runButton");
 runButton.addEventListener('click', () => {
     store.dispatch('toggleRun', {});
 });
-const runButtonInstance = new RunButton();
-runButtonInstance.render();
-
-// Reset button setup
 const resetButton = document.querySelector("#resetButton");
 resetButton.addEventListener('click', () => {
     store.dispatch('resetSimulation', {});
 });
+const runButtonsInstance = new RunButtons();
+runButtonsInstance.render();
 
 // Draw switches setup
-const followAgentsSwitch = document.querySelector("#followAgentsSwitch");
-followAgentsSwitch.addEventListener('input', () => {
-    store.dispatch('toggleSwitch', {name: 'followAgents', value: followAgentsSwitch.checked});
-});
 const drawJointsSwitch = document.querySelector("#drawJointsSwitch");
 drawJointsSwitch.addEventListener('input', () => {
     store.dispatch('toggleSwitch', {name: 'drawJoints', value: drawJointsSwitch.checked} );
 });
 const drawLidarsSwitch = document.querySelector("#drawLidarsSwitch");
+window.draw_lidars = true;
 drawLidarsSwitch.addEventListener('input', () => {
     store.dispatch('toggleSwitch', {name: 'drawLidars', value: drawLidarsSwitch.checked});
 });
@@ -145,6 +141,35 @@ creepersTypeSelect.addEventListener('input', () => {
 const creepersConfigInstance = new CreepersConfig();
 creepersConfigInstance.render()
 
+// Drawing mode setup
+const drawingModeSwitch = document.querySelector("#drawingModeSwitch");
+drawingModeSwitch.addEventListener('input', () => {
+    store.dispatch('toggleSwitch', {name: 'drawingMode', value: drawingModeSwitch.checked});
+});
+const drawGroundButton = document.querySelector('#drawGroundButton');
+drawGroundButton.addEventListener('click', () => {
+    store.dispatch('drawGround', !store.state.drawingModeState.drawing_ground);
+});
+const drawCeilingButton = document.querySelector('#drawCeilingButton');
+drawCeilingButton.addEventListener('click', () => {
+    store.dispatch('drawCeiling', !store.state.drawingModeState.drawing_ceiling);
+});
+const eraseButton = document.querySelector('#eraseButton');
+eraseButton.addEventListener('click', () => {
+    store.dispatch('erase', !store.state.drawingModeState.erasing);
+});
+const clearButton = document.querySelector('#clearButton');
+clearButton.addEventListener('click', () => {
+    store.dispatch('clear', {});
+});
+const generateTerrainButton = document.querySelector('#generateTerrainButton');
+generateTerrainButton.addEventListener('click', () => {
+    store.dispatch('generateTerrain', !store.state.drawingModeState.drawing);
+});
+const drawingModeInstance = new DrawingMode();
+drawingModeInstance.render();
+
+
 // fetch morphologies
 fetch('./policies.json')
     .then(resp => resp.text().then(body => {
@@ -163,10 +188,30 @@ fetch('./policies.json')
                 });
             });
         });
-
     });
 
 // interaction with index.js
 window.cancelAgentFollow = () => {
-    store.dispatch('toggleSwitch', {name: 'followAgents', value: false});
+    store.dispatch('followAgent', {index: -1, value: false});
 }
+
+window.get_mode = function () {
+    return store.state.mode;
+}
+
+window.is_drawing = function() {
+    return store.state.drawingModeState.drawing;
+}
+
+window.is_drawing_ground = () => {
+    return store.state.drawingModeState.drawing_ground;
+}
+
+window.is_drawing_ceiling = () => {
+    return store.state.drawingModeState.drawing_ceiling;
+}
+
+window.is_erasing = () => {
+    return store.state.drawingModeState.erasing;
+}
+

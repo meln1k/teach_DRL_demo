@@ -1,4 +1,5 @@
 //region Constants
+
 const FPS = 50
 const SCALE  = 30 // affects how fast-paced the game is, forces should be adjusted as well
 const VIEWPORT_W = 600
@@ -25,15 +26,16 @@ const NB_FIRST_STEPS_HANG = 5
 
 //endregion
 
-class MAParametricContinuousParkour {
+class DrawingMAPCP {
 
     constructor(morphologies, policies, positions, input_CPPN_dim=3, terrain_cppn_scale=10,
                 ceiling_offset=200, ceiling_clip_offset=0, water_clip=20,
-                movable_creepers=false, walker_args){
+                movable_creepers=false, ground, ceiling){
 
-        // Init Box2D
+        // Seed and init Box2D
+        //this.seed();
         this.scale = SCALE;
-        this.zoom = 1;
+        this.zoom = 0.35;
         this.contact_listener = new ContactDetector(this);
         let gravity = new b2.Vec2(0, -10);
         this.world = new b2.World(gravity);
@@ -71,6 +73,9 @@ class MAParametricContinuousParkour {
         this.input_CPPN_dim = input_CPPN_dim;
         this.terrain_CPPN = new CPPN(TERRAIN_LENGTH, input_CPPN_dim);
         this.set_terrain_cppn_scale(terrain_cppn_scale, ceiling_offset, ceiling_clip_offset);
+
+        this.ground = ground;
+        this.ceiling = ceiling;
 
         // Set info / action spaces
         //this._generate_agent(); // To get state / action sizes
@@ -110,20 +115,7 @@ class MAParametricContinuousParkour {
 
     // TODO
     seed(){
-        let seed = "";
-        for(let dim of this.CPPN_input_vector){
-            seed += dim;
-        }
-        seed += this.water_level;
-        seed += this.TERRAIN_CPPN_SCALE;
-        seed += this.creepers_width;
-        seed += this.creepers_height;
-        seed += this.creepers_spacing;
-        seed += this.movable_creepers;;
 
-        //console.log("seed = " + seed);
-        Math.seedrandom(seed);
-        //console.log(Math.random());
     }
 
     set_lidars_type(lidars_type){
@@ -171,7 +163,6 @@ class MAParametricContinuousParkour {
         this.set_terrain_cppn_scale(terrain_cppn_scale,
                         this.ceiling_offset * this.TERRAIN_CPPN_SCALE,
                                     this.ceiling_clip_offset * this.TERRAIN_CPPN_SCALE);
-        this.seed();
     }
 
     _destroy(){
@@ -238,12 +229,14 @@ class MAParametricContinuousParkour {
             // Hang sensor
             let sensor = agent.agent_body.sensors[agent.agent_body.sensors.length - i - 1];
             let sensor_position = sensor.GetPosition();
-            let idx = Math.round(sensor_position.x / ((TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP) * (TERRAIN_LENGTH + this.TERRAIN_STARTPAD));
+            //let idx = Math.round(sensor_position.x / ((TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP) * (TERRAIN_LENGTH + this.TERRAIN_STARTPAD));
+            let ceiling_y = find_best_y(sensor_position.x, this.terrain_ceiling);
             if(y_diff == 0){
-                y_diff = this.terrain_ceiling_y[idx] - sensor_position.y;
+                y_diff = ceiling_y - sensor_position.y;
+                //y_diff = this.terrain_ceiling[idx].y - sensor_position.y;
                 //y_diff = TERRAIN_HEIGHT + this.ceiling_offset - sensor_position.y;
             }
-            sensor.SetTransform(new b2.Vec2(sensor_position.x, this.terrain_ceiling_y[idx]),
+            sensor.SetTransform(new b2.Vec2(sensor_position.x, ceiling_y),
                 sensor.GetAngle());
         }
 
@@ -485,7 +478,7 @@ class MAParametricContinuousParkour {
     // ------------------------------------------ GAME GENERATION ------------------------------------------
 
     generate_game(){
-        this._generate_terrain();
+        this._generate_terrain(this.ground, this.ceiling);
         this._generate_clouds();
 
         for(let agent of this.agents){
@@ -502,76 +495,89 @@ class MAParametricContinuousParkour {
         }
     }
 
-    _generate_terrain(){
-        let y = this.terrain_CPPN.generate(this.CPPN_input_vector).arraySync();
+    _generate_terrain(ground = [], ceiling = []){
 
-        // TODO: check that maps are correct
-        y = y.map(e => [e[0] / this.TERRAIN_CPPN_SCALE, e[1] / this.TERRAIN_CPPN_SCALE]);
-        let ground_y = y.map(e => e[0]);
-        let ceiling_y = y.map(e => e[1]);
+        this.terrain_ground = [];
+        this.terrain_ceiling = [];
 
-        // Align ground with startpad
-        let offset = TERRAIN_HEIGHT - ground_y[0];
-        ground_y = ground_y.map(e => e + offset);
+        // Create startpad
+        for(let i = 0; i < this.TERRAIN_STARTPAD; i++){
+            this.terrain_ground.push({x: i * TERRAIN_STEP, y: TERRAIN_HEIGHT});
 
-        // Align ceiling from startpad ceiling
-        offset = TERRAIN_HEIGHT + this.ceiling_offset - ceiling_y[0];
-        ceiling_y = ceiling_y.map(e => e + offset);
+            this.terrain_ceiling.push({x: i * TERRAIN_STEP, y: TERRAIN_HEIGHT + this.ceiling_offset});
+        }
 
-        this.terrain_x = [];
-        this.terrain_ground_y = [];
-        this.terrain_ceiling_y = [];
-        this.terrain_creepers = [];
-        let x = 0;
-        let max_x = x + (TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP;
-
-        // Generation of the terrain
-        let i = 0;
-        while(x < max_x){
-            this.terrain_x.push(x);
-
-            if(i < this.TERRAIN_STARTPAD){
-                this.terrain_ground_y.push(TERRAIN_HEIGHT);
-                this.terrain_ceiling_y.push(TERRAIN_HEIGHT + this.ceiling_offset);
+        /* DRAWING GENERATION */
+        if(window.get_mode() == 'drawing'){
+            // Create ground terrain
+            if(ground.length > 0){
+                let ground_x_offset = this.TERRAIN_STARTPAD * TERRAIN_STEP - ground[0].x;
+                let ground_y_offset = TERRAIN_HEIGHT - ground[0].y;
+                for(let p of ground){
+                    this.terrain_ground.push({x: p.x + ground_x_offset, y: p.y + ground_y_offset});
+                }
             }
-            else{
-                this.terrain_ground_y.push(ground_y[i - this.TERRAIN_STARTPAD]);
+
+            // Create ceiling terrain
+            if(ceiling.length > 0) {
+                let ceiling_x_offset = this.TERRAIN_STARTPAD * TERRAIN_STEP - ceiling[0].x;
+                let ceiling_y_offset = TERRAIN_HEIGHT + this.ceiling_offset - ceiling[0].y;
+                for(let p of ceiling){
+                    this.terrain_ceiling.push({x: p.x + ceiling_x_offset, y: p.y + ceiling_y_offset}); //TODO: clip ceiling height according to ground?
+                }
+            }
+        }
+        /* CPPN GENERATION */
+        else{
+            let cppn_y = this.terrain_CPPN.generate(this.CPPN_input_vector).arraySync();
+            cppn_y = cppn_y.map(e => [e[0] / this.TERRAIN_CPPN_SCALE, e[1] / this.TERRAIN_CPPN_SCALE]);
+
+            // Get y values for the ground and align them with the startpad
+            let ground_offset = TERRAIN_HEIGHT - cppn_y[0][0];
+            let cppn_ground_y = cppn_y.map(e => e[0] + ground_offset);
+
+            // Get y values for the ceiling and align them with the startpad
+            let ceiling_offset = TERRAIN_HEIGHT + this.ceiling_offset - cppn_y[0][1];
+            let cppn_ceiling_y = cppn_y.map(e => e[1] + ceiling_offset);
+
+            // Push the terrain values in the lists
+            for(let i = 0; i < TERRAIN_LENGTH; i++){
+                this.terrain_ground.push({x: (this.TERRAIN_STARTPAD + i) * TERRAIN_STEP, y: cppn_ground_y[i]});
 
                 // Clip ceiling
-                let ceiling_val = ground_y[i - this.TERRAIN_STARTPAD] + this.ceiling_clip_offset;
-                if(ceiling_y[i - this.TERRAIN_STARTPAD] >= ceiling_val){
-                    ceiling_val = ceiling_y[i - this.TERRAIN_STARTPAD];
+                let ceiling_val = cppn_ground_y[i] + this.ceiling_clip_offset;
+                if(cppn_ceiling_y[i] >= ceiling_val){
+                    ceiling_val = cppn_ceiling_y[i];
                 }
-                this.terrain_ceiling_y.push(ceiling_val);
+                this.terrain_ceiling.push({x: (this.TERRAIN_STARTPAD + i) * TERRAIN_STEP, y: ceiling_val});
             }
-
-            x += TERRAIN_STEP;
-            i += 1;
         }
 
         // Draw terrain
-        let space_from_precedent_creeper = this.creepers_spacing;
-
         this.terrain_bodies = [];
         this.background_polys = [];
         let poly;
         let poly_data;
 
         // Water
-        // Fill water from GROUND_LIMIT to highest point of the current ceiling
-        //let air_max_distance = Math.max(...this.terrain_ceiling_y) - this.GROUND_LIMIT;
-        //this.water_y = this.GROUND_LIMIT + this.water_level * air_max_distance;
+        this.min_ground_y = Math.min(...this.terrain_ground.map(p => p.y));
+        this.air_max_distance = Math.max(...this.terrain_ceiling.map(p => p.y)) - this.min_ground_y;
+        this.water_y = this.min_ground_y + this.water_level * this.air_max_distance;
 
-        this.min_ground_y = Math.min(...this.terrain_ground_y);
-        this.air_max_distance = Math.max(...this.terrain_ceiling_y) - this.min_ground_y;
-        this.water_y = Math.min(...this.terrain_ground_y) + this.water_level * this.air_max_distance;
-
-        let water_poly = [
+        /*let water_poly = [
             [this.terrain_x[0], this.GROUND_LIMIT],
             [this.terrain_x[0], this.water_y],
             [this.terrain_x[this.terrain_x.length - 1], this.water_y],
             [this.terrain_x[this.terrain_x.length - 1], this.GROUND_LIMIT]
+        ];*/
+
+        let water_poly = [
+            [this.terrain_ground[0].x, this.GROUND_LIMIT],
+            [this.terrain_ground[0].x, this.water_y],
+            [this.terrain_ground[this.terrain_ground.length - 1].x, this.water_y],
+            [this.terrain_ground[this.terrain_ground.length - 1].x, this.GROUND_LIMIT]
         ];
+
         this.fd_water.shape.Set([new b2.Vec2(water_poly[0][0], water_poly[0][1]),
                 new b2.Vec2(water_poly[1][0], water_poly[1][1]),
                 new b2.Vec2(water_poly[2][0], water_poly[2][1]),
@@ -591,16 +597,14 @@ class MAParametricContinuousParkour {
         };
         //this.terrain_bodies.push(water_poly);
 
-        // Ground, ceiling and creepers bodies
-        for(let i = 0; i < this.terrain_x.length - 1; i++){
-
+        for(let i = 0; i < this.terrain_ground.length - 1; i++){
             // Ground
             poly = [
-                [this.terrain_x[i], this.terrain_ground_y[i]],
-                [this.terrain_x[i + 1], this.terrain_ground_y[i + 1]]
+                [this.terrain_ground[i].x, this.terrain_ground[i].y],
+                [this.terrain_ground[i + 1].x, this.terrain_ground[i + 1].y]
             ];
             this.fd_edge.shape.Set(new b2.Vec2(poly[0][0], poly[0][1]),
-                                   new b2.Vec2(poly[1][0], poly[1][1]));
+                new b2.Vec2(poly[1][0], poly[1][1]));
             let body_def = new b2.BodyDef();
             body_def.type = b2.Body.b2_staticBody;
             let t = this.world.CreateBody(body_def);
@@ -615,7 +619,7 @@ class MAParametricContinuousParkour {
             this.terrain_bodies.push(poly_data);
 
             // Visual poly to fill the ground
-            if(i <= this.terrain_x.length / 2){
+            if(i <= this.terrain_ground.length / 2){
                 poly.push([poly[1][0] + 10 * TERRAIN_STEP, 2 * this.GROUND_LIMIT]);
                 poly.push([poly[0][0], 2 * this.GROUND_LIMIT]);
             }
@@ -631,14 +635,16 @@ class MAParametricContinuousParkour {
                 vertices : poly,
             }
             this.background_polys.push(poly_data);
+        }
 
+        for(let i = 0; i < this.terrain_ceiling.length - 1; i++){
             // Ceiling
             poly = [
-                [this.terrain_x[i], this.terrain_ceiling_y[i]],
-                [this.terrain_x[i + 1], this.terrain_ceiling_y[i + 1]]
+                [this.terrain_ceiling[i].x, this.terrain_ceiling[i].y],
+                [this.terrain_ceiling[i + 1].x, this.terrain_ceiling[i + 1].y]
             ];
             this.fd_edge.shape.Set(new b2.Vec2(poly[0][0], poly[0][1]),
-                                   new b2.Vec2(poly[1][0], poly[1][1]));
+                new b2.Vec2(poly[1][0], poly[1][1]));
             body_def = new b2.BodyDef();
             body_def.type = b2.Body.b2_staticBody;
             t = this.world.CreateBody(body_def);
@@ -653,7 +659,7 @@ class MAParametricContinuousParkour {
             this.terrain_bodies.push(poly_data);
 
             // Visual poly to fill the ceiling
-            if(i <= this.terrain_x.length / 2){
+            if(i <= this.terrain_ceiling.length / 2){
                 poly.push([poly[1][0] + 10 * TERRAIN_STEP, 2 * this.CEILING_LIMIT]);
                 poly.push([poly[0][0], 2 * this.CEILING_LIMIT]);
             }
@@ -668,64 +674,45 @@ class MAParametricContinuousParkour {
                 vertices : poly,
             }
             this.background_polys.push(poly_data);
+        }
 
-            // Creepers
-            if(this.creepers_width != null && this.creepers_height != null){
-                if(space_from_precedent_creeper >= this.creepers_spacing){
+        // Creepers
+        if(this.creepers_width != null && this.creepers_height != null){
+            let creeper_width = Math.max(0.2, this.creepers_width);
+            let nb_creepers = Math.floor(this.terrain_ceiling[this.terrain_ceiling.length - 1].x / (this.creepers_spacing + creeper_width));
 
-                    let creeper_height = Math.max(0.2, Math.random() * (0.1 - (- 0.1)) + this.creepers_height - 0.1);
-                    let creeper_width = Math.max(0.2, this.creepers_width);
-                    let creeper_step_size = Math.max(1, Math.floor(creeper_width / TERRAIN_STEP));
-                    let creeper_y_init_pos = Math.max(this.terrain_ceiling_y[i],
-                                                      this.terrain_ceiling_y[Math.min(i + creeper_step_size, this.terrain_x.length - 1)]);
-                    if(this.movable_creepers){ // Break creepers in multiple objects linked by joints
-                        let previous_creeper_part = t;
+            for(let i = 1; i < nb_creepers; i++){
+                let creeper_height = Math.max(0.2, Math.random() * (0.1 - (- 0.1)) + this.creepers_height - 0.1);
+                let creeper_x_init_pos = i * (this.creepers_spacing + creeper_width);
+                let creeper_y_init_pos = find_best_y(creeper_x_init_pos, this.terrain_ceiling);
 
-                        // cut the creeper in unit parts
-                        for(let w = 0; w < Math.ceil(creeper_height); w++){
-                            let h;
-                            // last iteration: rest of the creeper
-                            if(w == Math.floor(creeper_height / CREEPER_UNIT)){
-                                h = Math.max(0.2, creeper_height % CREEPER_UNIT);
-                            }
-                            else{
-                                h = CREEPER_UNIT;
-                            }
+                if(this.movable_creepers){ // Break creepers in multiple objects linked by joints
 
-                            this.fd_creeper.shape.SetAsBox(creeper_width/2, h/2);
-                            body_def = new b2.BodyDef();
-                            body_def.type = b2.Body.b2_dynamicBody;
-                            body_def.position.Set(this.terrain_x[i] + creeper_width/2, creeper_y_init_pos - (w * CREEPER_UNIT) - h/2);
-                            t = this.world.CreateBody(body_def);
-                            t.CreateFixture(this.fd_creeper);
-                            t.SetUserData(new CustomUserData("creeper", CustomUserDataObjectTypes.SENSOR_GRIP_TERRAIN));
-                            color = "#6F8060"; // [0.437, 0.504, 0.375];
-                            poly_data = {
-                                type : "creeper",
-                                color1 : color,
-                                color2 : color,
-                                body : t,
-                            }
-                            this.terrain_bodies.push(poly_data);
+                    // Create a static base to which the creeper is attached
+                    this.fd_creeper.shape.SetAsBox(creeper_width/2, 0.2);
+                    body_def = new b2.BodyDef();
+                    body_def.type = b2.Body.b2_staticBody;
+                    body_def.position.Set(creeper_x_init_pos, creeper_y_init_pos - 0.1);
+                    t = this.world.CreateBody(body_def);
+                    t.CreateFixture(this.fd_creeper);
+                    t.SetUserData(new CustomUserData("creeper", CustomUserDataObjectTypes.SENSOR_GRIP_TERRAIN));
+                    let previous_creeper_part = t;
 
-                            let rjd_def = new b2.RevoluteJointDef();
-                            let anchor = new b2.Vec2(this.terrain_x[i] + creeper_width/2, creeper_y_init_pos - (w * CREEPER_UNIT));
-                            rjd_def.Initialize(previous_creeper_part, t, anchor);
-                            rjd_def.enableMotor = false;
-                            rjd_def.enableLimit = true;
-                            rjd_def.lowerAngle = -0.4 * Math.PI;
-                            rjd_def.upperAngle = 0.4 * Math.PI;
-                            let joint = this.world.CreateJoint(rjd_def);
-                            joint.SetUserData(new CustomMotorUserData("creeper", 6, false));
-                            this.creepers_joints.push(joint);
-                            previous_creeper_part = t;
+                    // Cut the creeper in unit parts
+                    for(let w = 0; w < Math.ceil(creeper_height); w++){
+                        let h;
+                        // last iteration: rest of the creeper
+                        if(w == Math.floor(creeper_height / CREEPER_UNIT)){
+                            h = Math.max(0.2, creeper_height % CREEPER_UNIT);
                         }
-                    }
-                    else{
-                        this.fd_creeper.shape.SetAsBox(creeper_width/2, creeper_height/2);
+                        else{
+                            h = CREEPER_UNIT;
+                        }
+
+                        this.fd_creeper.shape.SetAsBox(creeper_width/2, h/2);
                         body_def = new b2.BodyDef();
-                        body_def.type = b2.Body.b2_staticBody;
-                        body_def.position.Set(this.terrain_x[i] + creeper_width/2, creeper_y_init_pos - creeper_height/2);
+                        body_def.type = b2.Body.b2_dynamicBody;
+                        body_def.position.Set(creeper_x_init_pos, creeper_y_init_pos - (w * CREEPER_UNIT) - h/2);
                         t = this.world.CreateBody(body_def);
                         t.CreateFixture(this.fd_creeper);
                         t.SetUserData(new CustomUserData("creeper", CustomUserDataObjectTypes.SENSOR_GRIP_TERRAIN));
@@ -733,14 +720,39 @@ class MAParametricContinuousParkour {
                         poly_data = {
                             type : "creeper",
                             color1 : color,
+                            color2 : color,
                             body : t,
                         }
                         this.terrain_bodies.push(poly_data);
+
+                        let rjd_def = new b2.RevoluteJointDef();
+                        let anchor = new b2.Vec2(creeper_x_init_pos, creeper_y_init_pos - (w * CREEPER_UNIT));
+                        rjd_def.Initialize(previous_creeper_part, t, anchor);
+                        rjd_def.enableMotor = false;
+                        rjd_def.enableLimit = true;
+                        rjd_def.lowerAngle = -0.4 * Math.PI;
+                        rjd_def.upperAngle = 0.4 * Math.PI;
+                        let joint = this.world.CreateJoint(rjd_def);
+                        joint.SetUserData(new CustomMotorUserData("creeper", 6, false));
+                        this.creepers_joints.push(joint);
+                        previous_creeper_part = t;
                     }
-                    space_from_precedent_creeper = 0;
                 }
                 else{
-                    space_from_precedent_creeper += this.terrain_x[i] - this.terrain_x[i - 1]
+                    this.fd_creeper.shape.SetAsBox(creeper_width/2, creeper_height/2);
+                    body_def = new b2.BodyDef();
+                    body_def.type = b2.Body.b2_staticBody;
+                    body_def.position.Set(creeper_x_init_pos, creeper_y_init_pos - creeper_height/2);
+                    t = this.world.CreateBody(body_def);
+                    t.CreateFixture(this.fd_creeper);
+                    t.SetUserData(new CustomUserData("creeper", CustomUserDataObjectTypes.SENSOR_GRIP_TERRAIN));
+                    color = "#6F8060"; // [0.437, 0.504, 0.375];
+                    poly_data = {
+                        type : "creeper",
+                        color1 : color,
+                        body : t,
+                    }
+                    this.terrain_bodies.push(poly_data);
                 }
             }
         }
@@ -767,13 +779,13 @@ class MAParametricContinuousParkour {
     _generate_agent(agent, init_x=null, init_y=null, set_pos=false){
 
         if(init_x == null){
-            // If an init_pos is given for the agent (reset for terrain reshaping), init_y is computed accordingly for walkers
+            // If an init_pos is given for the agent (reset due to terrain reshaping), init_y is computed accordingly for walkers
             if(agent.init_pos != null){
                 init_x = agent.init_pos.x;
 
                 if (agent.agent_body.body_type == BodyTypesEnum.WALKER) {
-                    let idx = Math.round(init_x / ((TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP) * (TERRAIN_LENGTH + this.TERRAIN_STARTPAD));
-                    init_y = this.terrain_ground_y[idx] + agent.agent_body.AGENT_CENTER_HEIGHT;
+                    // Compute the best y value in terrain_ground corresponding to init_x
+                    init_y = find_best_y(init_x, this.terrain_ground) + agent.agent_body.AGENT_CENTER_HEIGHT;
                 }
             }
 
@@ -788,7 +800,6 @@ class MAParametricContinuousParkour {
         }
 
         agent.agent_body.draw(this.world, init_x, init_y, 0 /*Math.random() * 2 * INITIAL_RANDOM - INITIAL_RANDOM*/);
-        let pos = agent.agent_body.reference_head_object.GetPosition();
         agent.actions = Array.from({length: agent.agent_body.get_action_size()}, () => 0);
 
         if(set_pos && agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
@@ -799,65 +810,83 @@ class MAParametricContinuousParkour {
 
     set_agent_position(agent, x) {
         agent.agent_body.destroy(this.world);
-        let init_x = x * (TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP;
+
+        let init_x;
         let init_y;
-        let idx = x < 1 ? Math.floor(x * (TERRAIN_LENGTH + this.TERRAIN_STARTPAD)) : TERRAIN_LENGTH + this.TERRAIN_STARTPAD - 1;
 
         if (agent.agent_body.body_type == BodyTypesEnum.CLIMBER) {
+            init_x = x * this.terrain_ceiling[this.terrain_ceiling.length  - 1].x;
             init_y = null;
         }
         else if (agent.agent_body.body_type == BodyTypesEnum.WALKER) {
-            init_y = this.terrain_ground_y[idx] + agent.agent_body.AGENT_CENTER_HEIGHT;
+            init_x = x * this.terrain_ground[this.terrain_ground.length  - 1].x;
+            // Compute the best y value in terrain_ground corresponding to init_x
+            init_y = find_best_y(init_x, this.terrain_ground) + agent.agent_body.AGENT_CENTER_HEIGHT;
         }
 
         this._generate_agent(agent, init_x, init_y, true);
         this.update_lidars(agent);
-
-        //if(agent.agent_body.body_type != BodyTypesEnum.CLIMBER) {
-        //let step_rets = this.step();
-        //window.game.obs.push([...step_rets.map(e => e[0])]);
-        //}
     }
 
     set_scroll(agent=null, h=null, v=null){
-        if(window.follow_agent && agent != null){
-            let x = agent.agent_body.reference_head_object.GetPosition().x;
-            let y = agent.agent_body.reference_head_object.GetPosition().y;
+        let terrain_length = Math.max(this.terrain_ground[this.terrain_ground.length - 1].x, this.terrain_ceiling[this.terrain_ceiling.length - 1].x);
 
-            this.scroll = [
-                x * this.scale * this.zoom - RENDERING_VIEWER_W/5,
-                y * this.scale * this.zoom - RENDERING_VIEWER_H/2
-            ];
+        if(window.follow_agent){
+            if(agent != null){
+                let x = agent.agent_body.reference_head_object.GetPosition().x;
+                let y = agent.agent_body.reference_head_object.GetPosition().y;
+
+                this.scroll = [
+                    x * this.scale * this.zoom - RENDERING_VIEWER_W/5,
+                    y * this.scale * this.zoom - RENDERING_VIEWER_H * 2/5
+                ];
+            }
         }
 
-        else if(window.is_dragging){
+        else if(window.is_dragging_agent){
 
             if(window.dragging_side == "left"){
                 this.scroll[0] = window.agent_selected.agent_body.reference_head_object.GetPosition().x * this.scale * this.zoom - RENDERING_VIEWER_W * (0.1 + 0.05)
             }
-            else if(window.dragging_side == "right" && !(parseFloat(hScrollSlider.value) >= 100)){
+            else if(window.dragging_side == "right" /*&& !(parseFloat(hScrollSlider.value) >= 100)*/){
                 this.scroll[0] = window.agent_selected.agent_body.reference_head_object.GetPosition().x * this.scale * this.zoom - RENDERING_VIEWER_W * (0.85 + 0.05)
             }
         }
         else{
-            this.scroll = [
-                parseFloat(h)/100 * ((TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP * this.scale * this.zoom - RENDERING_VIEWER_W * 0.9) - RENDERING_VIEWER_W * 0.05,
+            /*this.scroll = [
+                parseFloat(h)/100 * (terrain_length * this.scale * this.zoom - RENDERING_VIEWER_W * 0.9) - RENDERING_VIEWER_W * 0.05,
                 parseFloat(v)/100 * this.air_max_distance/2 * this.scale * this.zoom
-                //parseFloat(v)/100 * RENDERING_VIEWER_H
+            ];*/
+            this.scroll = [
+                this.scroll[0] + h,
+                this.scroll[1] + v
             ];
         }
 
         this.scroll = [
-            Math.max(- 0.05 * RENDERING_VIEWER_W, Math.min(this.scroll[0], (TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP * this.scale * this.zoom - RENDERING_VIEWER_W * 0.9)),
-            Math.max(-0.5 * this.air_max_distance/2 * this.scale * this.zoom, Math.min(this.scroll[1], this.air_max_distance/2 * this.scale * this.zoom * 3/2))
+            Math.max(- 0.05 * RENDERING_VIEWER_W, Math.min(this.scroll[0], terrain_length * this.scale * this.zoom - RENDERING_VIEWER_W * 0.9)),
+            Math.max(-300, Math.min(this.scroll[1], 300))
         ];
 
-        hScrollSlider.value = 100 * ((this.scroll[0] + 0.05 * RENDERING_VIEWER_W) / ((TERRAIN_LENGTH + this.TERRAIN_STARTPAD) * TERRAIN_STEP * this.scale * this.zoom - RENDERING_VIEWER_W * 0.9));
-        vScrollSlider.value = 100 * this.scroll[1] / (this.air_max_distance/2 * this.scale * this.zoom);
+        window.scroll = this.scroll;
+
+        //hScrollSlider.value = 100 * ((this.scroll[0] + 0.05 * RENDERING_VIEWER_W) / (terrain_length * this.scale * this.zoom - RENDERING_VIEWER_W * 0.9));
+        //vScrollSlider.value = 100 * this.scroll[1] / (this.air_max_distance/2 * this.scale * this.zoom);
+    }
+
+    drag_scroll(h, v){
+        this.scroll = [
+            this.scroll[0] + h,
+            this.scroll[1] + v
+        ];
+        window.scroll = this.scroll;
     }
 
     set_zoom(zoom){
-        this.zoom = parseFloat(zoom);
+        this.zoom = Math.max(0.3, Math.min(parseFloat(zoom), 1.5));
+        //zoomSlider.value = this.zoom;
+        //zoomValue.innerText = this.zoom;
+        window.zoom = this.zoom;
     }
 
     add_agent(morphology, policy){
@@ -869,21 +898,59 @@ class MAParametricContinuousParkour {
     }
 
     delete_agent(agent_index){
-        if(this.agents.length > 0){
-            let agent = this.agents[agent_index];
+        if(this.agents.length > 0 && agent_index < this.agents.length){
 
-            let index = this.agents.indexOf(agent);
-            if(index != -1){
-                this.agents.splice(index, 1);
-            }
+            let agent = this.agents[agent_index];
+            this.agents.splice(agent_index, 1);
             agent.agent_body.destroy(this.world);
-            window.agent_selected = null;
+            //window.agent_selected = null;
 
             for(let agent of this.agents){
                 agent.id = this.agents.indexOf(agent);
             }
         }
+
     }
 
     //endregion
+}
+
+// Find the best y value corresponding to x according to the points in array
+function find_best_y(x, array){
+    // find the closest point to x in array according to the x-coordinate
+    let p1 = array.reduce(function(prev, curr) {
+        return (Math.abs(curr.x - x) < Math.abs(prev.x - x) ? curr : prev);
+    });
+    // get the index of p1
+    let i1 = array.indexOf(p1);
+    let p2;
+
+    // get p2 so that x in [p1.x, p2.x] or x in [p2.x, p1.x]
+    // case x > p1.x --> x in [p1.x, p2.x]
+    if(x > p1.x){
+        if(i1 < array.length - 1){
+            p2 = array[i1 + 1];
+        }
+        else{
+            p2 = p1;
+        }
+    }
+    //case x <= p1.x --> x in [p2.x, p1.x]
+    else{
+        if(i1 > 0){
+            p2 = array[i1 - 1];
+        }
+        else{
+            p2 = p1;
+        }
+    }
+
+    let y = p1.y;
+    // compute the equation of the line between p1 and p2 and find y corresponding to x
+    if(p1.x != p2.x){
+        let a = (p2.y - p1.y) / (p2.x - p1.x);
+        let b = p1.y - a * p1.x;
+        y = a * x + b;
+    }
+    return y;
 }

@@ -11,12 +11,17 @@ let JOINTS_COLORS = {
     "grip": "#FF0000",
 };
 
+let drawing_canvas;
+let erasing_canvas;
 function setup() {
     window.canvas = createCanvas(RENDERING_VIEWER_W, RENDERING_VIEWER_H);
     canvas.parent("canvas_container");
     canvas.style('display', 'block');
     canvas.style('margin-left', 'auto');
     canvas.style('margin-right', 'auto');
+
+    drawing_canvas = createGraphics(RENDERING_VIEWER_W, 2 * RENDERING_VIEWER_H);
+    erasing_canvas = createGraphics(RENDERING_VIEWER_W, 2 * RENDERING_VIEWER_H);
 
     background("#e6e6ff");
     noLoop();
@@ -68,79 +73,45 @@ function draw() {
 
         drawParkour(parkour);
 
-        // MULTI AGENT
-        if(window.multi_agents){
-            for(let agent of parkour.agents){
-                drawAgent(parkour, agent, parkour.scale);
-
-                if(window.draw_lidars){
-                    drawLidars(agent.lidars, parkour.scale);
-                }
-
-                if(window.draw_joints){
-
-                    // Agent motors
-                    let joints = [...agent.agent_body.motors];
-                    if(agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
-                        joints.push(agent.agent_body.neck_joint);
-                    }
-                    drawJoints(joints, parkour.scale);
-
-                    if(agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
-                        joints = [...agent.agent_body.sensors.map(s => s.GetUserData().has_joint ? s.GetUserData().joint : null)];
-                        drawJoints(joints, parkour.scale);
-                    }
-                }
-
-                if(window.draw_sensors){
-                    drawSensors(agent.agent_body.sensors, parkour.scale);
-                }
-
-                if(window.draw_names){
-                    let pos = agent.agent_body.reference_head_object.GetPosition();
-                    fill(0);
-                    noStroke()
-                    textSize(20/parkour.scale);
-                    //textAlign(CENTER);
-                    text(agent.policy.name, pos.x - agent.agent_body.AGENT_WIDTH/2, RENDERING_VIEWER_H - (pos.y + agent.agent_body.AGENT_HEIGHT/3));
-                }
-            }
-
-            if(window.draw_joints) {
-                // Creepers joints
-                drawJoints(parkour.creepers_joints, parkour.scale);
-            }
-        }
-
-
-        // ONE AGENT
-        else{
-            drawAgent(parkour, parkour.agent_body, parkour.scale);
+        for(let agent of parkour.agents){
+            drawAgent(parkour, agent, parkour.scale);
 
             if(window.draw_lidars){
-                drawLidars(parkour.lidar, parkour.scale);
+                drawLidars(agent.lidars, parkour.scale);
             }
 
             if(window.draw_joints){
-                // Creepers joints
-                drawJoints(parkour.creepers_joints, parkour.scale);
 
                 // Agent motors
-                let joints = [...parkour.agent_body.motors];
-                if(parkour.agent_body.body_type == BodyTypesEnum.CLIMBER){
-                    joints.push(parkour.agent_body.neck_joint);
+                let joints = [...agent.agent_body.motors];
+                if(agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
+                    joints.push(agent.agent_body.neck_joint);
                 }
                 drawJoints(joints, parkour.scale);
 
-                if(parkour.agent_body.body_type == BodyTypesEnum.CLIMBER){
-                    joints = [...parkour.agent_body.sensors.map(s => s.GetUserData().has_joint ? s.GetUserData().joint : null)];
+                if(agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
+                    joints = [...agent.agent_body.sensors.map(s => s.GetUserData().has_joint ? s.GetUserData().joint : null)];
                     drawJoints(joints, parkour.scale);
                 }
             }
 
             if(window.draw_sensors){
-                drawSensors(parkour.agent_body.sensors, parkour.scale);
+                drawSensors(agent.agent_body.sensors, parkour.scale);
             }
+
+            if(window.draw_names){
+                let pos = agent.agent_body.reference_head_object.GetPosition();
+                fill(0);
+                noStroke()
+                textSize(20/parkour.scale);
+                //textAlign(CENTER);
+                text(agent.policy.name, pos.x - agent.agent_body.AGENT_WIDTH/2, RENDERING_VIEWER_H - (pos.y + agent.agent_body.AGENT_HEIGHT/3));
+            }
+        }
+
+        if(window.draw_joints) {
+            // Creepers joints
+            drawJoints(parkour.creepers_joints, parkour.scale);
         }
 
         pop();
@@ -176,60 +147,30 @@ function drawJoints(joints, scale){
 function drawAgent(parkour, agent, scale){
     let stroke_coef = 1;
 
-    if(window.multi_agents){
-        if(agent.is_selected){
-            stroke_coef = 2;
-        }
-
-        let polys = agent.agent_body.get_elements_to_render();
-        for(let poly of polys){
-            let shape = poly.GetFixtureList().GetShape();
-
-            let vertices = [];
-            for(let i = 0; i < shape.m_count; i++){
-                let world_pos = poly.GetWorldPoint(shape.m_vertices[i]);
-                vertices.push([world_pos.x, world_pos.y]);
-            }
-
-            strokeWeight(stroke_coef * 2/scale);
-            stroke(poly.color2);
-            let color1 = poly.color1;
-            if(poly == agent.agent_body.reference_head_object){
-                let rgb01 = hexToRgb(poly.color1).map(c => c / 255);
-                let rgb255 = color_agent_head(agent, rgb01, poly.color2)[0].map(c => Math.round(c * 255));
-                color1 = rgbToHex(rgb255);
-            }
-            drawPolygon(vertices, color1);
-        }
-    }
-    else{
-        if(agent.is_selected){
-            stroke_coef = 2;
-        }
-
-        let polys = agent.get_elements_to_render();
-        for(let poly of polys){
-            let shape = poly.GetFixtureList().GetShape();
-
-            let vertices = [];
-            for(let i = 0; i < shape.m_count; i++){
-                let world_pos = poly.GetWorldPoint(shape.m_vertices[i]);
-                vertices.push([world_pos.x, world_pos.y]);
-            }
-
-            strokeWeight(stroke_coef * 2/scale);
-            stroke(poly.color2);
-            let color1 = poly.color1;
-            if(poly == agent.reference_head_object){
-                let rgb01 = hexToRgb(poly.color1).map(c => c / 255);
-                let rgb255 = parkour.color_agent_head(rgb01, poly.color2)[0].map(c => Math.round(c * 255));
-                color1 = rgbToHex(rgb255);
-            }
-            drawPolygon(vertices, color1);
-        }
+    if(agent.is_selected){
+        stroke_coef = 2;
     }
 
+    let polys = agent.agent_body.get_elements_to_render();
+    for(let poly of polys){
+        let shape = poly.GetFixtureList().GetShape();
 
+        let vertices = [];
+        for(let i = 0; i < shape.m_count; i++){
+            let world_pos = poly.GetWorldPoint(shape.m_vertices[i]);
+            vertices.push([world_pos.x, world_pos.y]);
+        }
+
+        strokeWeight(stroke_coef * 2/scale);
+        stroke(poly.color2);
+        let color1 = poly.color1;
+        if(poly == agent.agent_body.reference_head_object){
+            let rgb01 = hexToRgb(poly.color1).map(c => c / 255);
+            let rgb255 = color_agent_head(agent, rgb01, poly.color2)[0].map(c => Math.round(c * 255));
+            color1 = rgbToHex(rgb255);
+        }
+        drawPolygon(vertices, color1);
+    }
 }
 
 function drawLidars(lidars, scale){
@@ -261,7 +202,7 @@ function drawSkyClouds(parkour){
 
     // Rescaling
     scale(parkour.scale);
-    scale(parkour.zoom);
+    scale(parkour.zoom * 3/4);
 
     // Translating so that the environment is always horizontally centered
     translate(0, (1 - parkour.scale * parkour.zoom) * VIEWPORT_H/(parkour.scale * parkour.zoom));
@@ -279,11 +220,8 @@ function drawSkyClouds(parkour){
 
 function drawParkour(parkour){
     // Update scroll to stay centered on the agent position
-    if(window.follow_agent){
-        if(parkour.agents.length > 0 && window.agent_selected == null){
-            window.agent_selected = parkour.agents[0];
-        }
-        parkour.set_scroll(window.agent_selected, hScrollSlider.value, vScrollSlider.value);
+    if(window.follow_agent && window.agent_selected != null){
+        parkour.set_scroll(window.agent_selected, null, null);
     }
 
     // Sky & clouds
@@ -314,12 +252,8 @@ function drawParkour(parkour){
     // Draw all background elements
     for(let i = 0; i < parkour.background_polys.length; i++) {
         let poly = parkour.background_polys[i];
-        //let pos = poly.vertices[0][0] * parkour.zoom - parkour.scroll_offset;
-        //if(pos >= -0.01 * RENDERING_VIEWER_W && pos < RENDERING_VIEWER_W){
-            noStroke();
-            drawPolygon(poly.vertices, poly.color);
-        //}
-
+        noStroke();
+        drawPolygon(poly.vertices, poly.color);
     }
 
     // Draw all physical elements
@@ -328,27 +262,22 @@ function drawParkour(parkour){
         let shape = poly.body.GetFixtureList().GetShape();
         let vertices = [];
 
-        /*let pos = poly.body.GetPosition();
-        let w_pos = poly.body.GetWorldPoint(pos);
-        let x_pos = w_pos.x/parkour.zoom - parkour.scroll_offset;
-        if(x_pos >= -0.01 * RENDERING_VIEWER_W && x_pos < RENDERING_VIEWER_W){*/
-            if(poly.type == "creeper"){
-                for(let i = 0; i < shape.m_count; i++){
-                    let world_pos = poly.body.GetWorldPoint(shape.m_vertices[i]);
-                    vertices.push([world_pos.x, world_pos.y]);
-                }
-                noStroke();
-                drawPolygon(vertices, poly.color1);
+        if(poly.type == "creeper"){
+            for(let i = 0; i < shape.m_count; i++){
+                let world_pos = poly.body.GetWorldPoint(shape.m_vertices[i]);
+                vertices.push([world_pos.x, world_pos.y]);
             }
-            else{
-                let v1 = poly.body.GetWorldPoint(shape.m_vertex1);
-                let v2 = poly.body.GetWorldPoint(shape.m_vertex2);
-                vertices = [[v1.x, v1.y], [v2.x, v2.y]];
-                strokeWeight(1/parkour.scale);
-                drawLine(vertices, poly.color);
-            }
+            noStroke();
+            drawPolygon(vertices, poly.color1);
         }
-    //}
+        else{
+            let v1 = poly.body.GetWorldPoint(shape.m_vertex1);
+            let v2 = poly.body.GetWorldPoint(shape.m_vertex2);
+            vertices = [[v1.x, v1.y], [v2.x, v2.y]];
+            strokeWeight(1/parkour.scale);
+            drawLine(vertices, poly.color);
+        }
+    }
 }
 
 function drawPolygon(vertices, color){

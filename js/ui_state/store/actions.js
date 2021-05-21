@@ -14,9 +14,6 @@ export default {
     },
     toggleSwitch(context, payload) {
         switch (payload.name) {
-            case 'followAgents':
-                context.commit('followAgents', payload.value);
-                break;
             case 'drawJoints':
                 context.commit('drawJoints', payload.value);
                 break;
@@ -28,6 +25,9 @@ export default {
                 break;
             case 'drawNames':
                 context.commit('drawNames', payload.value);
+                break;
+            case 'drawingMode':
+                context.commit('switchMode', payload.value);
                 break;
         }
     },
@@ -75,6 +75,9 @@ export default {
     deleteAgent(context, payload) {
         context.commit('deleteAgent', payload);
     },
+    followAgent(context, payload) {
+        context.commit('followAgent', payload);
+    },
     selectMorphology(context, payload) {
         context.commit('selectMorphology', payload);
     },
@@ -83,5 +86,20 @@ export default {
     },
     addMorphology(context, payload) {
         context.commit('addMorphology', payload);
+    },
+    drawGround(context, payload) {
+        context.commit('drawGround', payload);
+    },
+    drawCeiling(context, payload) {
+        context.commit('drawCeiling', payload);
+    },
+    erase(context, payload) {
+        context.commit('erase', payload);
+    },
+    clear(context, payload) {
+        context.commit('clear', payload);
+    },
+    generateTerrain(context, payload){
+        context.commit('generateTerrain', payload);
     }
 };

@@ -26,18 +26,16 @@ ContactDetector.prototype.BeginContact = function (contact){
             let body = bodies[i];
             if(body.GetUserData().object_type == CustomUserDataObjectTypes.BODY_OBJECT && body.GetUserData().check_contact){
                 body.GetUserData().has_contact = true;
-                let other_body = bodies[(i + 1) % 2];
+                /*let other_body = bodies[(i + 1) % 2];
                 // Authorize climbing bodies to touch climbing parts
 
                 //TODO: check to which agent the body belongs
-                let agent_body = this.env.agent_body;
-                if(window.multi_agents){
-                    agent_body = this.env.agents[0].agent_body;
-                }
+                 agent_body = this.env.agents[0].agent_body;
+
                 if(body.GetUserData().is_contact_critical && !(other_body.GetUserData().object_type == CustomUserDataObjectTypes.GRIP_TERRAIN
                                                         && agent_body.body_type == BodyTypesEnum.CLIMBER)){
                     this.env.critical_contact = true;
-                }
+                }*/
             }
         }
     }

@@ -3,9 +3,10 @@ export default {
     currentMorphology: "bipedal",
     currentSeedIdx: "1",
     agents: [],
+    mode: 'procedural_generation', // 'drawing'
     simulationState: {
         status: 'init', // 'running', 'paused'
-        followAgents: true,
+        agentFollowed: null,
         drawJoints: false,
         drawLidars: true,
         drawSensors: false,
@@ -22,6 +23,12 @@ export default {
         width: 0.3,
         height: 3,
         spacing: 1,
-        type: 'Rigid'
+        type: 'Swingable' // 'Rigid'
+    },
+    drawingModeState: {
+        drawing: false,
+        drawing_ground: false,
+        drawing_ceiling: false,
+        erasing: false,
     }
 };

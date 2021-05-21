@@ -11,7 +11,6 @@ export default class DrawSwitches extends Component {
 
         const state = store.state.simulationState;
 
-        this.element.querySelector('#followAgentsSwitch').checked = state.followAgents;
         this.element.querySelector('#drawJointsSwitch').checked = state.drawJoints;
         this.element.querySelector('#drawLidarsSwitch').checked = state.drawLidars;
         this.element.querySelector('#drawSensorsSwitch').checked = state.drawSensors;

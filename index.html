@@ -18,6 +18,8 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/p5@1.2.0/lib/p5.js"></script>
 
+    <script src=//cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js></script>
+
     <!--SCRIPTS DEPENDENCIES-->
     <script defer src="./js/box2d.js"></script>
 
@@ -35,7 +37,9 @@
     <script defer src="js/bodies/climbers/climbing_profile_chimpanzee.js"></script>
 
     <script defer src="js/CPPN/cppn.js"></script>
-    <script defer src="js/envs/multi_agents_parametric_continuous_parkour.js"></script>
+    <script defer src="js/envs/drawing_mapcp.js"></script>
+    <!--<script defer src="js/envs/multi_agents_parametric_continuous_parkour.js"></script>-->
+    <!--<script defer src="js/envs/multi_agents_parametric_continuous_parkour.js"></script>-->
     <!--<script defer src="js/envs/parametric_continuous_parkour.js"></script>-->
     <!--<script defer src="js/envs/parametric_continuous_flat_parkour.js"></script>-->
     <script defer src="./js/parkour_game.js"></script>
@@ -43,6 +47,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
     <link rel="stylesheet" href="./demo.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     </style>
 </head>
 
@@ -58,56 +63,42 @@
             </div>
         </div>
 
-
         <div class="row justify-content-md-center g-2 mt-1">
-            <div class="row justify-content-md-center g-2 mt-1">
-                <div class="col">
-                    <label for="hScrollSlider" class="form-label">Horizontal scroll</label>
-                    <input type="range" class="form-range" min="0" max="100" value="0" id="hScrollSlider">
-                    <button id="resetHScroll" class="btn btn-primary"> Reset </button>
+            <div id="drawingMode" class="row justify-content-md-center g-2 mt-1">
+                <div class="form-check form-switch col col-md-auto">
+                    <input class="form-check-input" type="checkbox" id="drawingModeSwitch">
+                    <label class="form-check-label" for="drawingModeSwitch">Drawing Mode</label>
                 </div>
-
-                <div class="col">
-                    <label for="vScrollSlider" class="form-label">Vertical scroll</label>
-                    <input type="range" class="form-range" min="-50" max="100" value="0" id="vScrollSlider">
-                    <button id="resetVScroll" class="btn btn-primary"> Reset </button>
+                <div class="col col-md-auto">
+                    <button id="drawGroundButton" class="btn btn-outline-success disabled"><i class="fas fa-pencil-alt"></i> Ground </button>
                 </div>
-
-                <div class="col">
-                    <div class="row">
-                        <div class="col">
-                            <label for="zoomSlider" class="form-label">Zoom</label>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-10">
-                            <input type="range" class="form-range" min="0.3" max="1.5" value="1" id="zoomSlider">
-                        </div>
-                        <div class="col-1">
-                            <span id="zoomValue"></span>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <button id="resetZoom" class="btn btn-primary"> Reset </button>
-                        </div>
-                    </div>
+                <div class="col col-md-auto">
+                    <button id="drawCeilingButton" class="btn btn-outline-secondary disabled"><i class="fas fa-pencil-alt"></i> Ceiling </button>
+                </div>
+                <div class="col col-md-auto">
+                    <button id="eraseButton" class="btn btn-outline-warning disabled"><i class="fas fa-eraser"></i> Erase </button>
+                </div>
+                <div class="col col-md-auto">
+                    <button id="clearButton" class="btn btn-danger disabled"><i class="fas fa-times"></i> Clear </button>
+                </div>
+                <div class="col col-md-auto">
+                    <button id="generateTerrainButton" class="btn btn-success disabled"><i class="fas fa-arrow-right"></i> Generate terrain </button>
                 </div>
             </div>
+        </div>
 
 
             <div class="row justify-content-md-center g-2 mt-1">
-                <div class="col col-md-auto">
-                    <button id="runButton" class="btn btn-success"> Start </button>
-                </div>
-                <div class="col col-md-auto">
-                    <button id="resetButton" class="btn btn-danger"> Reset Simulation </button>
-                </div>
-                <div id="drawSelectors">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="followAgentsSwitch">
-                        <label class="form-check-label" for="followAgentsSwitch">Follow agents</label>
+                <div id="runButtons" class="row justify-content-md-center g-2 mt-1">
+                    <div class="col col-md-auto">
+                        <button id="runButton" class="btn btn-success"><i class="fas fa-play"></i></button>
                     </div>
+                    <div class="col col-md-auto">
+                        <button id="resetButton" class="btn btn-danger"><i class="fas fa-undo-alt"></i> Reset </button>
+                    </div>
+                </div>
+
+                <div id="drawSelectors">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="drawJointsSwitch">
                         <label class="form-check-label" for="drawJointsSwitch">Draw joints</label>
@@ -128,6 +119,8 @@
             </div>
 
 
+
+
             <form id="config-form" onsubmit="return false">
                 <div class="row justify-content-md-left g-2 mt-1">
                     <div class="col col-4">
@@ -141,7 +134,6 @@
                         </div>
                         <div class="row mt-3 mx-1">
                             <button id="addAgentButton" class="btn btn-warning"> Add agent </button>
-
                         </div>
                         
                     </div>
@@ -158,7 +150,7 @@
                 <div class="row justify-content-md-center mt-3 mx-1">
                     <div class="col" id="terrainShapeCol">
                         <div class="row">
-                            <label for="hScrollSlider" class="form-label">Terrain shape</label>
+                            <label class="form-label">Terrain shape</label>
                         </div>
                         <div class="row">
                             <div class="col-10">
@@ -188,7 +180,7 @@
                     <div class="col">
                         <div class="row">
                             <div class="col">
-                                <label for="hScrollSlider" class="form-label">Smoothing</label>
+                                <label for="smoothingSlider" class="form-label">Smoothing</label>
                             </div>
                             <div class="col-8">
                                 <input type="range" class="form-range" min="10" max="40" value="20" step="0.01"
@@ -200,7 +192,7 @@
                         </div>
                         <div class="row">
                             <div class="col">
-                                <label for="hScrollSlider" class="form-label">Water level</label>
+                                <label for="waterSlider" class="form-label">Water level</label>
                             </div>
                             <div class="col-8">
                                 <input type="range" class="form-range" min="0" max="1" step="0.01" value="0"
@@ -224,7 +216,7 @@
                                 <label for="creepersWidthSlider" class="form-label">Width</label>
                             </div>
                             <div class="col">
-                                <input type="range" class="form-range" min="0.2" max="1" value="0.3" step="0.01"
+                                <input type="range" class="form-range" min="0.2" max="0.7" value="0.3" step="0.01"
                                     id="creepersWidthSlider">
                             </div>
                             <div class="col">
@@ -250,7 +242,7 @@
                                 <label for="creepersSpacingSlider" class="form-label">Spacing</label>
                             </div>
                             <div class="col">
-                                <input type="range" class="form-range" min="0.01" max="5" value="1" step="0.01"
+                                <input type="range" class="form-range" min="0.6" max="5" value="1" step="0.01"
                                     id="creepersSpacingSlider">
                             </div>
                             <div class="col">
@@ -266,12 +258,11 @@
                         </select>
                     </div>
                 </div>
-
-
             </form>
         </div>
         <script src="./index.js"></script>
         <script type="module" src="./ui.js"></script>
+    </div>
 </body>
 
 </html>
