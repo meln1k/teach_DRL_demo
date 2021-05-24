@@ -59,6 +59,7 @@ drawSensorsSwitch.addEventListener('input', () => {
     store.dispatch('toggleSwitch',  {name: 'drawSensors', value: drawSensorsSwitch.checked});
 });
 const drawNamesSwitch = document.querySelector("#drawNamesSwitch");
+window.draw_names = true;
 drawNamesSwitch.addEventListener('input', () => {
     store.dispatch('toggleSwitch', {name: 'drawNames', value: drawNamesSwitch.checked});
 });
@@ -188,6 +189,9 @@ fetch('./policies.json')
                 });
             });
         });
+    })
+    .then(done => {
+        store.dispatch('addDefaultAgent', {});
     });
 
 // interaction with index.js
@@ -215,3 +219,10 @@ window.is_erasing = () => {
     return store.state.drawingModeState.erasing;
 }
 
+window.addDefaultAgent = () => {
+    store.dispatch('addDefaultAgent', {});
+}
+
+window.markCppnInitialized = () => {
+    store.dispatch('markCppnInitialized', {});
+}

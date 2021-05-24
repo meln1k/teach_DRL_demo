@@ -91,6 +91,7 @@ class DrawingMAPCP {
 
         let agent = {
             id: this.agents.length,
+            name: policy.name,
             is_selected: false,
             morphology: morphology,
             policy: policy,
@@ -503,7 +504,6 @@ class DrawingMAPCP {
         // Create startpad
         for(let i = 0; i < this.TERRAIN_STARTPAD; i++){
             this.terrain_ground.push({x: i * TERRAIN_STEP, y: TERRAIN_HEIGHT});
-
             this.terrain_ceiling.push({x: i * TERRAIN_STEP, y: TERRAIN_HEIGHT + this.ceiling_offset});
         }
 
@@ -511,8 +511,8 @@ class DrawingMAPCP {
         if(window.get_mode() == 'drawing'){
             // Create ground terrain
             if(ground.length > 0){
-                let ground_x_offset = this.TERRAIN_STARTPAD * TERRAIN_STEP - ground[0].x;
-                let ground_y_offset = TERRAIN_HEIGHT - ground[0].y;
+                let ground_x_offset = 0//this.TERRAIN_STARTPAD * TERRAIN_STEP - ground[0].x;
+                let ground_y_offset = 0//TERRAIN_HEIGHT - ground[0].y;
                 for(let p of ground){
                     this.terrain_ground.push({x: p.x + ground_x_offset, y: p.y + ground_y_offset});
                 }
@@ -520,8 +520,8 @@ class DrawingMAPCP {
 
             // Create ceiling terrain
             if(ceiling.length > 0) {
-                let ceiling_x_offset = this.TERRAIN_STARTPAD * TERRAIN_STEP - ceiling[0].x;
-                let ceiling_y_offset = TERRAIN_HEIGHT + this.ceiling_offset - ceiling[0].y;
+                let ceiling_x_offset = 0//this.TERRAIN_STARTPAD * TERRAIN_STEP - ceiling[0].x;
+                let ceiling_y_offset = 0//TERRAIN_HEIGHT + this.ceiling_offset - ceiling[0].y;
                 for(let p of ceiling){
                     this.terrain_ceiling.push({x: p.x + ceiling_x_offset, y: p.y + ceiling_y_offset}); //TODO: clip ceiling height according to ground?
                 }
@@ -552,6 +552,10 @@ class DrawingMAPCP {
                 this.terrain_ceiling.push({x: (this.TERRAIN_STARTPAD + i) * TERRAIN_STEP, y: ceiling_val});
             }
         }
+        window.ground = [...this.terrain_ground];
+        window.ground.splice(0, this.TERRAIN_STARTPAD);
+        window.ceiling = [...this.terrain_ceiling];
+        window.ceiling.splice(0, this.TERRAIN_STARTPAD);
 
         // Draw terrain
         this.terrain_bodies = [];
@@ -563,13 +567,6 @@ class DrawingMAPCP {
         this.min_ground_y = Math.min(...this.terrain_ground.map(p => p.y));
         this.air_max_distance = Math.max(...this.terrain_ceiling.map(p => p.y)) - this.min_ground_y;
         this.water_y = this.min_ground_y + this.water_level * this.air_max_distance;
-
-        /*let water_poly = [
-            [this.terrain_x[0], this.GROUND_LIMIT],
-            [this.terrain_x[0], this.water_y],
-            [this.terrain_x[this.terrain_x.length - 1], this.water_y],
-            [this.terrain_x[this.terrain_x.length - 1], this.GROUND_LIMIT]
-        ];*/
 
         let water_poly = [
             [this.terrain_ground[0].x, this.GROUND_LIMIT],

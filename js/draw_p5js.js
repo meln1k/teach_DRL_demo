@@ -74,39 +74,42 @@ function draw() {
         drawParkour(parkour);
 
         for(let agent of parkour.agents){
-            drawAgent(parkour, agent, parkour.scale);
+            if(!window.is_drawing()){
+                drawAgent(parkour, agent, parkour.scale);
 
-            if(window.draw_lidars){
-                drawLidars(agent.lidars, parkour.scale);
-            }
-
-            if(window.draw_joints){
-
-                // Agent motors
-                let joints = [...agent.agent_body.motors];
-                if(agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
-                    joints.push(agent.agent_body.neck_joint);
+                if(window.draw_lidars){
+                    drawLidars(agent.lidars, parkour.scale);
                 }
-                drawJoints(joints, parkour.scale);
 
-                if(agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
-                    joints = [...agent.agent_body.sensors.map(s => s.GetUserData().has_joint ? s.GetUserData().joint : null)];
+                if(window.draw_joints){
+
+                    // Agent motors
+                    let joints = [...agent.agent_body.motors];
+                    if(agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
+                        joints.push(agent.agent_body.neck_joint);
+                    }
                     drawJoints(joints, parkour.scale);
+
+                    if(agent.agent_body.body_type == BodyTypesEnum.CLIMBER){
+                        joints = [...agent.agent_body.sensors.map(s => s.GetUserData().has_joint ? s.GetUserData().joint : null)];
+                        drawJoints(joints, parkour.scale);
+                    }
+                }
+
+                if(window.draw_sensors){
+                    drawSensors(agent.agent_body.sensors, parkour.scale);
+                }
+
+                if(window.draw_names){
+                    let pos = agent.agent_body.reference_head_object.GetPosition();
+                    fill(0);
+                    noStroke()
+                    textSize(25/ parkour.scale);
+                    //textAlign(CENTER);
+                    text(agent.name, pos.x - agent.agent_body.AGENT_WIDTH/2, RENDERING_VIEWER_H - (pos.y + agent.agent_body.AGENT_HEIGHT/3));
                 }
             }
 
-            if(window.draw_sensors){
-                drawSensors(agent.agent_body.sensors, parkour.scale);
-            }
-
-            if(window.draw_names){
-                let pos = agent.agent_body.reference_head_object.GetPosition();
-                fill(0);
-                noStroke()
-                textSize(20/parkour.scale);
-                //textAlign(CENTER);
-                text(agent.policy.name, pos.x - agent.agent_body.AGENT_WIDTH/2, RENDERING_VIEWER_H - (pos.y + agent.agent_body.AGENT_HEIGHT/3));
-            }
         }
 
         if(window.draw_joints) {

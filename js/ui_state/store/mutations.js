@@ -1,4 +1,12 @@
 export default {
+    markCppnInitialized(state, payload) {
+        state.cppnInitialized = true;
+        return state;
+    },
+    disableDefaultAgent(state, payload) {
+        state.defaultAgentAdded = true;
+        return state;
+    },
     updateCreepersConfig(state, payload) {
         console.log(payload);
         switch (payload.name) {
@@ -140,6 +148,12 @@ export default {
         window.game.env.render();
         return state;
     },
+    renameAgent(state, payload) {
+        state.agents[payload.index].name = payload.value;
+        window.game.env.agents[payload.index].name = payload.value;
+        window.game.env.render();
+        return state;
+    },
     selectMorphology(state, payload) {
         state.currentMorphology = payload;
         state.currentSeedIdx = 0;
@@ -155,12 +169,10 @@ export default {
     },
     switchMode(state, payload) {
         if(payload){
-            state.drawingModeState.drawing = true;
             state.mode = 'drawing';
+            state.drawingModeState.drawing = false;
             background("#E6F0FF");
             drawing_canvas.clear();
-            window.ground = [];
-            window.ceiling = [];
             window.terrain = {
                 ground: [],
                 ceiling: []
@@ -174,7 +186,6 @@ export default {
             state.drawingModeState.erasing = false;
         }
         state.simulationState.status = 'init';
-        state.agents = [];
         window.game.env.set_zoom(0.35);
         window.game.env.set_scroll(null, -0.05 * RENDERING_VIEWER_W, 0);
         window.init_default();
@@ -209,7 +220,6 @@ export default {
             ceiling: []
         };
         state.simulationState.status = 'init';
-        state.agents = [];
         window.game.env.set_zoom(0.35);
         window.game.env.set_scroll(null, -0.05 * RENDERING_VIEWER_W, 0);
         window.init_default();
@@ -217,9 +227,10 @@ export default {
     },
     generateTerrain(state, payload){
         state.drawingModeState.drawing = payload;
+        state.simulationState.status = 'init';
 
         window.game.env.set_zoom(0.35);
-        window.game.env.set_scroll(null, -0.05 * RENDERING_VIEWER_W, 0);
+        //window.game.env.set_scroll(null, -0.05 * RENDERING_VIEWER_W, 0);
 
         // Generate the terrain from the shapes drawn
         if(!state.drawingModeState.drawing) {
@@ -232,36 +243,71 @@ export default {
             window.terrain.ground.sort(function (a, b) {
                 return a.x - b.x;
             });
-            for (let p of window.terrain.ground) {
-                window.ground.push({
-                    x: p.x / (window.game.env.scale * window.game.env.zoom),
-                    y: (RENDERING_VIEWER_H - p.y) / (window.game.env.scale * window.game.env.zoom)
-                })
-            }
+            window.ground = [...window.terrain.ground];
 
             window.terrain.ceiling.sort(function (a, b) {
                 return a.x - b.x;
             });
-            for (let p of window.terrain.ceiling) {
-                window.ceiling.push({
-                    x: p.x / (window.game.env.scale * window.game.env.zoom),
-                    y: (RENDERING_VIEWER_H - p.y) / (window.game.env.scale * window.game.env.zoom)
-                })
-            }
+            window.ceiling = [...window.terrain.ceiling];
 
-            state.simulationState.status = 'init';
-            state.agents = [];
             window.init_default();
         }
 
         // Return to drawing
         else {
+
+            // Case no ground has been drawn yet
+            if(window.terrain.ground.length == 0 && window.ground.length > 0){
+
+                for(let i = 0; i < window.ground.length - 1; i++){
+                    let p = window.ground[i];
+                    let p2 = window.ground[i + 1];
+                    let p_pos = convertPosEnvToCanvas(p.x, p.y);
+                    let p2_pos = convertPosEnvToCanvas(p2.x, p2.y);
+
+                    drawing_canvas.stroke("#66994D");
+                    drawing_canvas.strokeWeight(4);
+                    drawing_canvas.line(
+                        p_pos.x,
+                        p_pos.y,
+                        p2_pos.x,
+                        p2_pos.y
+                    )
+
+                    window.terrain.ground.push({x: p.x, y: p.y});
+                }
+                let p = window.ground[window.ground.length - 1];
+                window.terrain.ground.push({x: p.x, y: p.y});
+            }
+
+            // Case no ceiling has been drawn yet
+            if(window.terrain.ceiling.length == 0 && window.ceiling.length > 0){
+
+                for(let i = 0; i < window.ceiling.length - 1; i++){
+                    let p = window.ceiling[i];
+                    let p2 = window.ceiling[i + 1];
+                    let p_pos = convertPosEnvToCanvas(p.x, p.y);
+                    let p2_pos = convertPosEnvToCanvas(p2.x, p2.y);
+
+                    drawing_canvas.stroke("#808080");
+                    drawing_canvas.strokeWeight(4);
+                    drawing_canvas.line(
+                        p_pos.x,
+                        p_pos.y,
+                        p2_pos.x,
+                        p2_pos.y
+                    )
+
+                    window.terrain.ceiling.push({x: p.x, y: p.y});
+                }
+                let p = window.ceiling[window.ceiling.length - 1];
+                window.terrain.ceiling.push({x: p.x, y: p.y});
+            }
+
             window.ground = [];
             window.ceiling = [];
-            state.simulationState.status = 'init';
-            state.agents = [];
             window.init_default();
-            image(drawing_canvas, 0, 0);
+            image(drawing_canvas, 0, window.game.env.scroll[1]);
         }
         return state;
     }

@@ -25,12 +25,11 @@ export default class DrawingMode extends Component {
             eraseButton.className = "btn btn-outline-warning disabled";
             clearButton.className = "btn btn-danger disabled";
             generateTerrainButton.className = "btn btn-success disabled";
-            generateTerrainButton.childNodes[1].innerText = "Generate terrain";
+            generateTerrainButton.innerText = "Generate terrain";
         }
         else if(store.state.mode == 'drawing'){
 
             clearButton.className = "btn btn-danger";
-            generateTerrainButton.className = "btn btn-success";
 
             if(state.drawing){
 
@@ -47,13 +46,15 @@ export default class DrawingMode extends Component {
                 else if(state.erasing){
                     eraseButton.className = "btn btn-warning";
                 }
-                generateTerrainButton.childNodes[1].innerText = "Generate terrain";
+                generateTerrainButton.className = "btn btn-success";
+                generateTerrainButton.innerText = "Generate terrain";
             }
             else{
                 drawGroundButton.className = "btn btn-outline-success disabled";
                 drawCeilingButton.className = "btn btn-outline-secondary disabled";
                 eraseButton.className = "btn btn-outline-warning disabled";
-                generateTerrainButton.childNodes[1].innerText = "Return to draw";
+                generateTerrainButton.className = "btn btn-primary";
+                generateTerrainButton.innerText = "Return to draw";
             }
         }
     }

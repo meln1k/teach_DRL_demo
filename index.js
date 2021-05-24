@@ -5,10 +5,17 @@ body_type_mapping.set("chimpanzee", "climbing_profile_chimpanzee");
 
 function init(cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type, ground, ceiling) {
 
+    let morphologies = [];
+    let policies = [];
+    let positions = [];
+
     if(window.game != null){
         window.game.pause();
+        morphologies = [...window.game.env.agents.map(a => a.morphology)];
+        policies = [...window.game.env.agents.map(a => a.policy)];
+        positions = [...window.game.env.agents.map(agent => agent.agent_body.reference_head_object.GetPosition())];
     }
-    window.game = new ParkourGame([], [], [], cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type, ground, ceiling);
+    window.game = new ParkourGame(morphologies, policies, positions, cppn_input_vector, water_level, creepers_width, creepers_height, creepers_spacing, smoothing, creepers_type, ground, ceiling);
     window.agent_selected = null;
     window.game.env.set_zoom(0.35);
     window.game.env.set_scroll(window.agent_selected, -0.05 * RENDERING_VIEWER_W, 0);
@@ -31,6 +38,8 @@ async function loadModel() {
     window.agent_selected = null;
     window.cppn_model = await tf.loadGraphModel('./js/CPPN/weights/same_ground_ceiling_cppn/tfjs_model/model.json');
     init_default();
+    window.markCppnInitialized();
+    window.addDefaultAgent();
 }
 window.addEventListener("load", loadModel, false);
 
@@ -41,10 +50,9 @@ function getCreepersType() {
 /* IN-CANVAS MOUSE INTERACTIONS */
 
 // Get the position of the mouse cursor in the environment scale
-function getMousePosToEnvScale(){
-    //let x = Math.max(0, Math.min(mouseX, window.canvas.width));
-    let x = Math.max(-window.canvas.width * 0.01, Math.min(mouseX, window.canvas.width * 1.01));
-    let y = Math.max(0, Math.min(mouseY, window.canvas.height));
+function convertPosCanvasToEnv(x_pos, y_pos){
+    let x = Math.max(-window.canvas.width * 0.01, Math.min(x_pos, window.canvas.width * 1.01));
+    let y = Math.max(0, Math.min(y_pos, window.canvas.height));
 
     x +=  window.game.env.scroll[0];
     y = -(y - window.game.env.scroll[1]);
@@ -54,6 +62,15 @@ function getMousePosToEnvScale(){
 
     y += (1 - window.game.env.scale * window.game.env.zoom) * RENDERING_VIEWER_H/(window.game.env.scale * window.game.env.zoom)
         + (window.game.env.zoom - 1) * (window.game.env.ceiling_offset)/window.game.env.zoom * 1/3 + RENDERING_VIEWER_H;
+
+    return {x: x, y: y};
+}
+
+function convertPosEnvToCanvas(x_pos, y_pos){
+    let x = x_pos * window.game.env.scale * window.game.env.zoom - window.game.env.scroll[0];
+    let y = window.game.env.scroll[1] - (y_pos - RENDERING_VIEWER_H) * window.game.env.scale * window.game.env.zoom
+        + (1 - window.game.env.scale * window.game.env.zoom) * RENDERING_VIEWER_H
+        + (window.game.env.zoom - 1) * window.game.env.ceiling_offset * window.game.env.scale * 1/3;
 
     return {x: x, y: y};
 }
@@ -69,7 +86,7 @@ function mousePressed(){
         window.prevMouseY = mouseY;
 
         if(!window.is_drawing()){
-            let mousePos = getMousePosToEnvScale();
+            let mousePos = convertPosCanvasToEnv(mouseX, mouseY);
 
             for(let agent of window.game.env.agents){
 
@@ -129,19 +146,19 @@ function mouseDragged(){
             //cursor(HAND);
             if(window.is_drawing_ground()){
                 drawing_canvas.push();
-                drawing_canvas.stroke('green');
-                drawing_canvas.strokeWeight(5);
+                drawing_canvas.stroke("#66994D");
+                drawing_canvas.strokeWeight(4);
                 drawing_canvas.line(mouseX, mouseY - window.game.env.scroll[1], window.prevMouseX, window.prevMouseY - window.game.env.scroll[1]);
                 drawing_canvas.pop();
-                window.terrain.ground.push({x: mouseX, y: mouseY - window.game.env.scroll[1]});
+                window.terrain.ground.push(convertPosCanvasToEnv(mouseX, mouseY));
             }
             else if(window.is_drawing_ceiling()){
                 drawing_canvas.push();
-                drawing_canvas.stroke('grey');
-                drawing_canvas.strokeWeight(5);
+                drawing_canvas.stroke("#808080");
+                drawing_canvas.strokeWeight(4);
                 drawing_canvas.line(mouseX, mouseY - window.game.env.scroll[1], window.prevMouseX, window.prevMouseY - window.game.env.scroll[1]);
                 drawing_canvas.pop();
-                window.terrain.ceiling.push({x: mouseX, y: mouseY - window.game.env.scroll[1]});
+                window.terrain.ceiling.push(convertPosCanvasToEnv(mouseX, mouseY));
             }
             else if(window.is_erasing()){
                 erasing_canvas.clear();
@@ -149,13 +166,14 @@ function mouseDragged(){
                 erasing_canvas.fill(255);
                 erasing_canvas.circle(mouseX, mouseY - window.game.env.scroll[1], window.erasing_radius * 2);
                 if(window.terrain.ground.length > 0 || window.terrain.ceiling.length > 0){
+                    let mousePos = convertPosCanvasToEnv(mouseX, mouseY);
 
                     // Remove the points that are within the circle radius from the ground and ceiling lists
                     window.terrain.ground = window.terrain.ground.filter(function(point, index, array){
-                        return Math.pow(point.x - mouseX, 2) + Math.pow(point.y - (mouseY - window.game.env.scroll[1]), 2) > Math.pow(window.erasing_radius, 2);
+                        return Math.pow(point.x - mousePos.x, 2) + Math.pow(point.y - mousePos.y, 2) > Math.pow(window.erasing_radius / (window.game.env.scale * window.game.env.zoom), 2);
                     });
                     window.terrain.ceiling = window.terrain.ceiling.filter(function(point, index, array){
-                        return Math.pow(point.x - mouseX, 2) + Math.pow(point.y - (mouseY - window.game.env.scroll[1]), 2) > Math.pow(window.erasing_radius, 2);
+                        return Math.pow(point.x - mousePos.x, 2) + Math.pow(point.y - mousePos.y, 2) > Math.pow(window.erasing_radius / (window.game.env.scale * window.game.env.zoom), 2);
                     });
 
                     drawing_canvas.erase();
@@ -181,7 +199,7 @@ function mouseDragged(){
 
                 // Dragging an agent
                 if (agent.is_selected) {
-                    let mousePos = getMousePosToEnvScale();
+                    let mousePos = convertPosCanvasToEnv(mouseX, mouseY);
                     let x;
                     if (agent.agent_body.body_type == BodyTypesEnum.CLIMBER) {
                         x = mousePos.x / window.game.env.terrain_ceiling[window.game.env.terrain_ceiling.length - 1].x;
@@ -207,12 +225,6 @@ function mouseDragged(){
         }
     }
 
-    /*// Mouse out of canvas + DRAWING
-    else if(window.is_drawing()){
-        window.prevMouseX = mouseX;
-        window.prevMouseY = mouseY;
-    }*/
-
     // Mouse horizontally out of canvas + dragging agent
     else if(window.is_dragging_agent
         && mouseY >= 0 && mouseY < window.canvas.height){
@@ -229,7 +241,7 @@ function mouseDragged(){
 
                 window.game.env.set_scroll(null);
 
-                let mousePos = getMousePosToEnvScale();
+                let mousePos = convertPosCanvasToEnv(mouseX, mouseY);
                 let x;
                 if (agent.agent_body.body_type == BodyTypesEnum.CLIMBER) {
                     x = mousePos.x / window.game.env.terrain_ceiling[window.game.env.terrain_ceiling.length - 1].x;
@@ -270,15 +282,13 @@ function mouseMoved(){
             image(erasing_canvas, 0, window.game.env.scroll[1]);
         }
 
-        else if(window.is_erasing() &&
-            mouseX < 0 || mouseX > window.canvas.width
-            || mouseY < 0 || mouseY > window.canvas.height) {
+        else if(window.is_erasing()
+            && (mouseX < 0 || mouseX > window.canvas.width
+            || mouseY < 0 || mouseY > window.canvas.height)) {
             window.game.env.render();
+            image(drawing_canvas, 0, window.game.env.scroll[1]);
+            image(erasing_canvas, 0, window.game.env.scroll[1]);
         }
-
-        //window.game.env.render();
-        image(drawing_canvas, 0, window.game.env.scroll[1]);
-        image(erasing_canvas, 0, window.game.env.scroll[1]);
     }
 }
 
