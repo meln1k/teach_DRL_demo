@@ -10,7 +10,7 @@ export default {
     addDefaultAgent(context, payload) {
         const state = context.state;
 
-        if (state.cppnInitialized && !state.defaultAgentAdded) {
+        if (state.cppnInitialized && state.morphologies.length != 0 && !state.defaultAgentAdded) {
             context.commit('disableDefaultAgent', payload);
             const morphology = body_type_mapping.get(context.state.currentMorphology);
             const currentSeed = context.state.morphologies
