@@ -4,6 +4,28 @@ bodyTypeMapping.set("chimpanzee", "climbing_profile_chimpanzee");
 
 
 export default {
+    markCppnInitialized(context, payload) {
+        context.commit('markCppnInitialized', payload);
+    },
+    addDefaultAgent(context, payload) {
+        const state = context.state;
+
+        if (state.cppnInitialized && !state.defaultAgentAdded) {
+            context.commit('disableDefaultAgent', payload);
+            const morphology = body_type_mapping.get(context.state.currentMorphology);
+            const currentSeed = context.state.morphologies
+                .filter(m => m.morphology == context.state.currentMorphology)
+                .flatMap(morphology => morphology.seeds)
+                .find(seed => seed.idx == context.state.currentSeedIdx);
+            const name = context.state.currentMorphology + "_" + currentSeed.seed;
+            const path = currentSeed.path;
+            context.commit('addAgent', {
+                morphology: morphology,
+                name: name,
+                path: path,
+            });
+        }
+    },
     changeCreepersConfig(context, payload) {
         context.commit('updateCreepersConfig', payload);
         context.commit('resetSimulation', { keepPositions: true});

@@ -1,4 +1,12 @@
 export default {
+    markCppnInitialized(state, payload) {
+        state.cppnInitialized = true;
+        return state;
+    },
+    disableDefaultAgent(state, payload) {
+        state.defaultAgentAdded = true;
+        return state;
+    },
     updateCreepersConfig(state, payload) {
         console.log(payload);
         switch (payload.name) {

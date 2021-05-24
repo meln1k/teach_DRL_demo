@@ -86,47 +86,32 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="advanced-config-tab" data-bs-toggle="tab"
                         data-bs-target="#advanced-config" type="button" role="tab" aria-controls="advanced-config"
-                        aria-selected="false">Advanced configuration</button>
+                        aria-selected="false">Agent Selection</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="parkour-gen-tab" data-bs-toggle="tab" data-bs-target="#parkour-gen"
+                        type="button" role="tab" aria-controls="parkour-gen" aria-selected="false">Parkour
+                        generation</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="draw-config-tab" data-bs-toggle="tab" data-bs-target="#draw-config"
+                        type="button" role="tab" aria-controls="draw-config" aria-selected="false">Draw the
+                        track</button>
                 </li>
             </ul>
 
             <!-- Tab panes -->
             <div class="tab-content">
                 <div class="tab-pane active" id="getting-started" role="tabpanel" aria-labelledby="getting-started-tab">
-                    Welcome to the DRL demo
+                    <p>Welcome to the Deep Reinforcement Learning demo!</p>
+                    <br>
+                    <p>Here you can play with a simulation where pre-trained agents are trying to navigate through a
+                        generated environment.</p>
+                    <p>To get started, click the button green button above to start the agent. If you want to customise the simulation, go through different tabs above.</p>
+                    <br>
+                    <p>Enjoy!</p>
                 </div>
                 <div class="tab-pane" id="advanced-config" role="tabpanel" aria-labelledby="advanced-config-tab">
-                    Here you can configure additinal parmeters
-
-                    <!-- terrain generation -->
-                    <div id="drawingMode" class="row justify-content-md-center g-2 mt-1">
-                        <div class="form-check form-switch col col-md-auto">
-                            <input class="form-check-input" type="checkbox" id="drawingModeSwitch">
-                            <label class="form-check-label" for="drawingModeSwitch">Drawing Mode</label>
-                        </div>
-                        <div class="col col-md-auto">
-                            <button id="drawGroundButton" class="btn btn-outline-success disabled"><i
-                                    class="fas fa-pencil-alt"></i> Ground </button>
-                        </div>
-                        <div class="col col-md-auto">
-                            <button id="drawCeilingButton" class="btn btn-outline-secondary disabled"><i
-                                    class="fas fa-pencil-alt"></i> Ceiling </button>
-                        </div>
-                        <div class="col col-md-auto">
-                            <button id="eraseButton" class="btn btn-outline-warning disabled"><i
-                                    class="fas fa-eraser"></i>
-                                Erase </button>
-                        </div>
-                        <div class="col col-md-auto">
-                            <button id="clearButton" class="btn btn-danger disabled"><i class="fas fa-times"></i> Clear
-                            </button>
-                        </div>
-                        <div class="col col-md-auto">
-                            <button id="generateTerrainButton" class="btn btn-success disabled"> Generate terrain
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- Draw joins/sensors/names selectors -->
                     <div class="row justify-content-md-center g-2 mt-1">
                         <div id="drawSelectors">
@@ -169,8 +154,8 @@
                             <ol class="list-group" id="agentsList"></ol>
                         </div>
                     </div>
-
-
+                </div>
+                <div class="tab-pane" id="parkour-gen" role="tabpanel" aria-labelledby="parkour-gen-tab">
                     <!-- parkour generation -->
                     <div class="row justify-content-md-center mt-3 mx-1">
                         Parkour Generation
@@ -286,6 +271,37 @@
                                 <option>Rigid</option>
                                 <option>Swingable</option>
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="draw-config" role="tabpanel" aria-labelledby="draw-config-tab">
+                    <!-- terrain drawing -->
+                    <div id="drawingMode" class="row justify-content-md-center g-2 mt-1">
+                        <div class="form-check form-switch col col-md-auto">
+                            <input class="form-check-input" type="checkbox" id="drawingModeSwitch">
+                            <label class="form-check-label" for="drawingModeSwitch">Drawing Mode</label>
+                        </div>
+                        <div class="col col-md-auto">
+                            <button id="drawGroundButton" class="btn btn-outline-success disabled"><i
+                                    class="fas fa-pencil-alt"></i> Ground </button>
+                        </div>
+                        <div class="col col-md-auto">
+                            <button id="drawCeilingButton" class="btn btn-outline-secondary disabled"><i
+                                    class="fas fa-pencil-alt"></i> Ceiling </button>
+                        </div>
+                        <div class="col col-md-auto">
+                            <button id="eraseButton" class="btn btn-outline-warning disabled"><i
+                                    class="fas fa-eraser"></i>
+                                Erase </button>
+                        </div>
+                        <div class="col col-md-auto">
+                            <button id="clearButton" class="btn btn-danger disabled"><i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                        <div class="col col-md-auto">
+                            <button id="generateTerrainButton" class="btn btn-success disabled"> Generate terrain
+                            </button>
                         </div>
                     </div>
                 </div>

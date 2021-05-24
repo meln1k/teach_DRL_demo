@@ -1,7 +1,7 @@
 export default {
     morphologies: [],
     currentMorphology: "bipedal",
-    currentSeedIdx: "1",
+    currentSeedIdx: "0",
     agents: [],
     mode: 'procedural_generation', // 'drawing'
     simulationState: {
@@ -13,8 +13,8 @@ export default {
         drawNames: true
     },
     parkourConfig: {
-        dim1: 0,
-        dim2: 0,
+        dim1: 1.0,
+        dim2: 1.0,
         dim3: 0,
         smoothing: 20,
         waterLevel: 0
@@ -30,5 +30,7 @@ export default {
         drawing_ground: false,
         drawing_ceiling: false,
         erasing: false,
-    }
+    },
+    defaultAgentAdded: false,
+    cppnInitialized: false,
 };

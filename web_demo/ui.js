@@ -189,6 +189,9 @@ fetch('./policies.json')
                 });
             });
         });
+    })
+    .then(done => {
+        store.dispatch('addDefaultAgent', {});
     });
 
 // interaction with index.js
@@ -216,3 +219,10 @@ window.is_erasing = () => {
     return store.state.drawingModeState.erasing;
 }
 
+window.addDefaultAgent = () => {
+    store.dispatch('addDefaultAgent', {});
+}
+
+window.markCppnInitialized = () => {
+    store.dispatch('markCppnInitialized', {});
+}

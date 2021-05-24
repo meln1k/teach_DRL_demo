@@ -38,6 +38,8 @@ async function loadModel() {
     window.agent_selected = null;
     window.cppn_model = await tf.loadGraphModel('./js/CPPN/weights/same_ground_ceiling_cppn/tfjs_model/model.json');
     init_default();
+    window.markCppnInitialized();
+    window.addDefaultAgent();
 }
 window.addEventListener("load", loadModel, false);
 
